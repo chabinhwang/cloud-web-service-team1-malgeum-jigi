@@ -1,0 +1,78 @@
+# ===== OS 파일 =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===== IDE 설정 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== 환경 변수 =====
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# ===== 로그 파일 =====
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# ===== Node.js (백엔드) =====
+node_modules/
+dist/
+build/
+coverage/
+.nyc_output/
+.pm2/
+*.tmp
+*.temp
+
+# ===== Flutter (프론트엔드) =====
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Flutter - iOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/.generated/
+
+# Flutter - Android
+**/android/.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.jks
+
+# Flutter - Web
+**/web/build/
+
+# Flutter - Windows
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugins.cmake
+
+# Flutter - macOS
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Flutter - 기타
+.history/
