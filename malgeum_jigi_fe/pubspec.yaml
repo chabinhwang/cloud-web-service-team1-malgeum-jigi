@@ -35,6 +35,15 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # HTTP requests for API integration
+  http: ^1.2.0
+
+  # Intl for date formatting
+  intl: ^0.19.0
+
+  # Modern Google-style navigation bar
+  google_nav_bar: ^5.0.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
