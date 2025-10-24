@@ -84,21 +84,20 @@ class _VentilationTabState extends State<VentilationTab> {
 
                     // Ventilation Score Card (Material 3)
                     Card(
-                      elevation: 0,
+                      elevation: 2,
+                      shadowColor: const Color(0x140D0A2C),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: AppTheme.getScoreBackgroundColor(
-                            ventilationScore,
-                          ),
-                          width: 1.5,
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
                         ),
                       ),
                       color: AppTheme.getScoreBackgroundColor(ventilationScore)
-                          .withValues(alpha: 0.4),
+                          .withValues(alpha: 0.5),
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(24),
                         child: Column(
                           children: [
                             Text(
@@ -179,7 +178,11 @@ class _VentilationTabState extends State<VentilationTab> {
                       firstChild: SizedBox.shrink(),
                       secondChild: Card(
                         margin: const EdgeInsets.only(top: 16),
-                        elevation: 0,
+                        elevation: 2,
+                        shadowColor: const Color(0x140D0A2C),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -264,6 +267,11 @@ class _VentilationTabState extends State<VentilationTab> {
                       firstChild: SizedBox.shrink(),
                       secondChild: Card(
                         margin: const EdgeInsets.only(top: 16),
+                        elevation: 2,
+                        shadowColor: const Color(0x140D0A2C),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -292,11 +300,11 @@ class _VentilationTabState extends State<VentilationTab> {
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.lightGreen.withValues(alpha: 0.5),
+                                  color: AppTheme.lightGreen.withValues(alpha: 0.6),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: AppTheme.lightGreen.withValues(alpha: 0.8),
-                                    width: 1,
+                                    color: Colors.transparent,
+                                    width: 0,
                                   ),
                                 ),
                                 child: Column(
@@ -390,11 +398,11 @@ class _VentilationTabState extends State<VentilationTab> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: backgroundColor.withValues(alpha: 0.5),
+        color: backgroundColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: backgroundColor.withValues(alpha: 0.8),
-          width: 1,
+          color: Colors.transparent,
+          width: 0,
         ),
       ),
       child: Row(
@@ -443,11 +451,11 @@ class _VentilationTabState extends State<VentilationTab> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: backgroundColor.withValues(alpha: 0.5),
+        color: backgroundColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: backgroundColor.withValues(alpha: 0.8),
-          width: 1,
+          color: Colors.transparent,
+          width: 0,
         ),
       ),
       child: Row(

@@ -239,13 +239,14 @@ class LifeGuideTab extends StatelessWidget {
 
                     // Tips Section (Material 3)
                     Card(
-                      elevation: 0,
+                      elevation: 2,
+                      shadowColor: const Color(0x140D0A2C),
                       color: const Color(0xFFFAF5FF).withValues(alpha: 0.5), // purple-50
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: const Color(0xFFD8B4FE).withValues(alpha: 0.8), // purple-300
-                          width: 1,
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
                         ),
                       ),
                       child: Padding(
@@ -306,12 +307,13 @@ class LifeGuideTab extends StatelessWidget {
 
   Widget _buildActivityCard(Activity activity, BuildContext context) {
     return Card(
-      elevation: 0,
+      elevation: 2,
+      shadowColor: const Color(0x140D0A2C),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-        side: BorderSide(
-          color: activity.status.getBorderColor().withValues(alpha: 0.7),
-          width: 1,
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(
+          color: Colors.transparent,
+          width: 0,
         ),
       ),
       color: activity.status.getBadgeColor().withValues(alpha: 0.4),
