@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
-import routes from "./routes/Routes.js";
-import outdoorGuideRoute from "./routes/outdoorGuideRoute.js";
+import weatherRoutes from './routes/weatherRoutes.js';
+import guideRoutes from './routes/guideRoutes.js';
 
 dotenv.config(); // .env 파일 로드
 
@@ -11,9 +11,9 @@ const PORT = process.env.PORT || 3000;
 // 미들웨어 설정
 app.use(express.json()); // JSON 요청 바디 파싱
 
-// 라우트 등록
-app.use("/", routes);
-app.use("/", outdoorGuideRoute);
+// 라우팅
+app.use('/api/weather', weatherRoutes);
+app.use('/api/guides', guideRoutes);
 
 // 기본 라우트
 app.get("/", (req, res) => {

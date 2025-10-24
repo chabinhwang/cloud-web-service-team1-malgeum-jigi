@@ -8,8 +8,14 @@ const KMA_KEY = process.env.KMA_KEY;
 // 현재 시각 기준, 가장 가까운 과거 정시(00분) 구하기
 function getClosestPastHour() {
   const now = new Date();
+  const minutes = now.getMinutes();
+
+  if (minutes === 0) {
+    // 00분이면 1시간 전으로
+    now.setHours(now.getHours() - 1);
+  }
   now.setMinutes(0, 0, 0); // 분, 초, 밀리초를 0으로
-  return now; // 그대로 반환 (이 시각이 이미 가장 가까운 과거 정시)
+  return now;
 }
 
 // Date 객체 → YYYYMMDDHHMI (예: 202510241700)

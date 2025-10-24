@@ -18,12 +18,13 @@ export async function generateVentilationScore(temperature, humidity, rainfall, 
   아래 데이터를 바탕으로 0~100점 사이의 환기 점수를 평가해줘.
   점수가 높을수록 환기하기 좋은 환경이야.
   그리고 상태(status), 이모지(emoji), 간단한 설명(description)을 함께 반환해줘.
-  결과는 JSON 형식으로만 출력해.
 
   - 기온: ${temperature}℃
   - 습도: ${humidity}%
   - 강수량: ${rainfall}mm
   - 미세먼지: ${pm10}㎍/㎥
+
+  응답은 다른 문자열 없이 아래 예시처럼 JSON 자체만 출력해줘.
 
   예시:
   {
@@ -71,7 +72,7 @@ export async function generateOutdoorGuide(temperature, humidity, rainfall, pm10
   - 강수량: ${rainfall}mm
   - 미세먼지: ${pm10}㎍/㎥
 
-  응답은 JSON 형식으로만 해줘.
+  응답은 다른 문자열 없이 아래 예시처럼 JSON 자체만 출력해줘.
   예시:
   {
     "advisability": "추천",
