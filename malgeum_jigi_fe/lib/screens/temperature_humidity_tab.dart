@@ -65,17 +65,18 @@ class TemperatureHumidityTab extends StatelessWidget {
                   children: [
                     // Today's Environment Summary (Material 3)
                     Card(
-                      elevation: 0,
+                      elevation: 2,
+                      shadowColor: const Color(0x140D0A2C),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                         side: const BorderSide(
-                          color: AppTheme.borderColorLight,
-                          width: 1,
+                          color: Colors.transparent,
+                          width: 0,
                         ),
                       ),
-                      color: AppTheme.lightBlue.withValues(alpha: 0.4),
+                      color: AppTheme.lightBlue.withValues(alpha: 0.5),
                       child: Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         child: Column(
                           children: [
                             Text(
@@ -236,13 +237,14 @@ class TemperatureHumidityTab extends StatelessWidget {
 
                     // Additional Tips (Material 3)
                     Card(
-                      elevation: 0,
+                      elevation: 2,
+                      shadowColor: const Color(0x140D0A2C),
                       color: AppTheme.lightYellow.withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: AppTheme.cautionYellow.withValues(alpha: 0.8),
-                          width: 1,
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
                         ),
                       ),
                       child: Padding(
@@ -352,10 +354,11 @@ class TemperatureHumidityTab extends StatelessWidget {
     }
 
     return Card(
-      elevation: 0,
+      elevation: 2,
+      shadowColor: const Color(0x140D0A2C),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor, width: 1),
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Colors.transparent, width: 0),
       ),
       color: backgroundColor.withValues(alpha: 0.5),
       child: Padding(
@@ -369,8 +372,8 @@ class TemperatureHumidityTab extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.borderColorLight,
-                  width: 1,
+                  color: Colors.transparent,
+                  width: 0,
                 ),
               ),
               child: Icon(icon, size: 24, color: textColor),
@@ -468,8 +471,12 @@ class TemperatureHumidityTab extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
                       ),
                       child: Row(
                         children: [

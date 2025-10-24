@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Primary Colors (Material 3)
-  static const Color primaryBlue = Color(0xFF2563EB); // blue-600
-  static const Color lightBlue = Color(0xFFEFF6FF); // blue-50
-  static const Color accentBlue = Color(0xFF3B82F6); // blue-500
+  // Primary Colors (Figma Design)
+  static const Color primaryBlue = Color(0xFF4A3AFF); // Figma Purple
+  static const Color lightBlue = Color(0xFFE5EAFC); // Figma Light Blue
+  static const Color accentBlue = Color(0xFF2D5BFF); // Figma Blue 400
 
   // Status Colors
-  static const Color goodGreen = Color(0xFF22C55E); // green-600
-  static const Color lightGreen = Color(0xFFF0FDF4); // green-50
+  static const Color goodGreen = Color(0xFF04CE00); // Figma Green 400
+  static const Color lightGreen = Color(0xFFE1F6E3); // Figma Green 100
   static const Color cautionYellow = Color(0xFFEAB308); // yellow-500
   static const Color lightYellow = Color(0xFFFEFCE8); // yellow-50
-  static const Color badRed = Color(0xFFEF4444); // red-500
-  static const Color lightRed = Color(0xFFFEF2F2); // red-50
+  static const Color badRed = Color(0xFFFF718B); // Figma Red 400
+  static const Color lightRed = Color(0xFFFCB5C3); // Figma Red 300
 
   // Material 3 Surface Colors
   static const Color surfaceColor = Colors.white;
-  static const Color surfaceDim = Color(0xFFF5F5F5); // gray-100
+  static const Color surfaceDim = Color(0xFFF7F7FB); // Figma Light Gray
   static const Color surfaceBright = Colors.white;
 
   // Neutral Colors
-  static const Color backgroundColor = Color(0xFFF9FAFB); // gray-50
-  static const Color borderColor = Color(0xFFE5E7EB); // gray-200
-  static const Color borderColorLight = Color(0xFFF3F4F6); // gray-100
-  static const Color textPrimary = Color(0xFF111827); // gray-900
-  static const Color textSecondary = Color(0xFF6B7280); // gray-600
-  static const Color textTertiary = Color(0xFF9CA3AF); // gray-400
+  static const Color backgroundColor = Color(0xFFF7F7FB); // Figma Background
+  static const Color borderColor = Color(0xFFE5E5EF); // Figma Border
+  static const Color borderColorLight = Color(0xFFE5E5EF); // Figma Border Light
+  static const Color textPrimary = Color(0xFF1E1B39); // Figma Black
+  static const Color textSecondary = Color(0xFF9291A5); // Figma Gray 400
+  static const Color textTertiary = Color(0xFF615E83); // Figma Gray Text
 
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -48,16 +48,16 @@ class AppTheme {
     // Material 3 Card Theme
     cardTheme: CardThemeData(
       color: surfaceColor,
-      elevation: 0,
-      shadowColor: Colors.transparent,
+      elevation: 2,
+      shadowColor: const Color(0x140D0A2C), // Figma shadow: rgba(13,10,44,0.08)
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         side: const BorderSide(
-          color: borderColorLight,
-          width: 1,
+          color: Colors.transparent,
+          width: 0,
         ),
       ),
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 12),
     ),
     // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
