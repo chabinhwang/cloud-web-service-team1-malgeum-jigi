@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import corsMiddleware from "./config/corsConfig.js";
 import weatherRoutes from './routes/weatherRoutes.js';
 import guideRoutes from './routes/guideRoutes.js';
 
@@ -8,8 +9,11 @@ dotenv.config(); // .env 파일 로드
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 미들웨어 설정
-app.use(express.json()); // JSON 요청 바디 파싱
+// CORS 미들웨어 등록
+app.use(corsMiddleware);
+
+// JSON 요청 바디 파싱
+app.use(express.json());
 
 // 라우팅
 app.use('/api/weather', weatherRoutes);

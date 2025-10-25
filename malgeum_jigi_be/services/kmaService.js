@@ -29,7 +29,7 @@ function formatDateToKmaTm(date) {
 }
 
 // 단기예보
-export async function getShortForecast(lat, lon, address) {
+export async function getCurrentWeather(lat, lon, address) {
   try {
     // 1️⃣ 위경도 → 기상청 지점번호(stn)
     const stn = await getNearestStation(lat, lon, address);
@@ -70,13 +70,6 @@ export async function getShortForecast(lat, lon, address) {
   }
 }
 
-// 중기예보
-export async function getMidForecast(lat, lon, address) {
-  const url = `https://apihub.kma.go.kr/api/typ01/url/kma_midtm2.php?stn=0&authKey=${KMA_KEY}`;
-  const response = await axios.get(url);
-  return response.data;
-}
-
 // 황사 정보
 export async function getDustInfo(lat, lon, address) {
     try {
@@ -114,3 +107,4 @@ export async function getDustInfo(lat, lon, address) {
     throw new Error("PM10 조회 실패");
   }
 }
+

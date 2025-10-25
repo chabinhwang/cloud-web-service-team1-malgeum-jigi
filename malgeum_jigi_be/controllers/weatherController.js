@@ -1,4 +1,4 @@
-import { getShortForecast, getDustInfo } from "../services/kmaService.js";
+import { getCurrentWeather, getDustInfo } from "../services/kmaService.js";
 
 export async function getCurrentAirQuality(req, res) {
   const { latitude, longitude } = req.query;
@@ -13,7 +13,7 @@ export async function getCurrentAirQuality(req, res) {
 
   try {
     // 1️⃣ 단기예보(온도, 습도)
-    const shortForecast = await getShortForecast(latitude, longitude);
+    const shortForecast = await getCurrentWeather(latitude, longitude);
     const { TA: temperature, HM: humidity } = shortForecast;
 
     // 2️⃣ 황사(PM10)

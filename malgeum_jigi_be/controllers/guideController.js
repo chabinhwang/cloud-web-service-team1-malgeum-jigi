@@ -1,5 +1,5 @@
 import e from "express";
-import { getShortForecast, getMidForecast, getDustInfo } from "../services/kmaService.js";
+import { getCurrentWeather, getDustInfo } from "../services/kmaService.js";
 import { generateVentilationScore, generateOutdoorGuide } from "../services/openaiService.js";
 
 export async function getVentilationScore(req, res) {
@@ -15,7 +15,7 @@ export async function getVentilationScore(req, res) {
 
   try {
     // 1️⃣ 기상청 단기예보 (온도, 습도, 강수량)
-    const forecast = await getShortForecast(latitude, longitude, location);
+    const forecast = await getCurrentWeather(latitude, longitude, location);
     const { TA: temperature, HM: humidity, RN: rainfallRaw } = forecast;
     const rainfall = rainfallRaw < 0 ? 0 : rainfallRaw;
 
@@ -66,7 +66,7 @@ export async function getOutdoorGuide(req, res) {
 
   try {
     // 1️⃣ 기상청 단기예보
-    const forecast = await getShortForecast(latitude, longitude, "현재 위치");
+    const forecast = await getCurrentWeather(latitude, longitude, "현재 위치");
     const { TA: temperature, HM: humidity, RN: rainfallRaw } = forecast;
     const rainfall = rainfallRaw < 0 ? 0 : rainfallRaw;
 
