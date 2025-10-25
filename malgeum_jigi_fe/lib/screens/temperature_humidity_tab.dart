@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive_util.dart';
 import '../utils/location_provider.dart';
+import '../utils/api_parser.dart';
 import '../widgets/tab_header.dart';
 import '../models/air_quality_data.dart';
 import '../services/api_service.dart';
@@ -64,72 +65,10 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
       if (mounted) {
         setState(() {
           // 환경 데이터 파싱
-          if (environmentResponse != null) {
-            _todayData = TodayEnvironmentData(
-              minTemp: (environmentResponse['min_temperature'] as num?)?.toInt() ??
-                  8,
-              maxTemp: (environmentResponse['max_temperature'] as num?)?.toInt() ??
-                  22,
-              avgHumidity:
-                  (environmentResponse['avg_humidity'] as num?)?.toInt() ?? 72,
-              eveningHumidity:
-                  (environmentResponse['evening_humidity'] as num?)?.toInt() ??
-                      85,
-              currentHumidity:
-                  (environmentResponse['current_humidity'] as num?)?.toInt() ??
-                      62,
-            );
-          } else {
-            _todayData = const TodayEnvironmentData(
-              minTemp: 8,
-              maxTemp: 22,
-              avgHumidity: 72,
-              eveningHumidity: 85,
-              currentHumidity: 62,
-            );
-          }
+          _todayData = ApiParser.parseTodayEnvironment(environmentResponse);
 
           // 가전 가이드 데이터 파싱
-          if (applianceResponse != null) {
-            final appliancesList =
-                applianceResponse['appliances'] as List<dynamic>? ?? [];
-            _appliances = appliancesList
-                .map((e) => ApplianceGuide(
-                      name: e['name'] as String,
-                      status: e['status'] as String,
-                      time: e['time'] as String?,
-                      reason: e['reason'] as String,
-                      setting: e['setting'] as String?,
-                    ))
-                .toList();
-          } else {
-            // 기본값 설정
-            _appliances = [
-              const ApplianceGuide(
-                name: '제습기',
-                status: '필요',
-                time: '오후 6시 ~ 밤 11시',
-                reason:
-                    '저녁부터 습도가 80% 이상으로 올라가요. 곰팡이 예방과 쾌적한 실내 환경을 위해 제습기를 켜두세요.',
-                setting: '습도 55~60% 유지',
-              ),
-              const ApplianceGuide(
-                name: '난방',
-                status: '필요',
-                time: '새벽 5시 ~ 오전 8시',
-                reason:
-                    '새벽 기온이 8°C까지 떨어져요. 기상 30분 전에 타이머를 설정하면 따뜻하게 일어날 수 있어요.',
-                setting: '20~22°C',
-              ),
-              const ApplianceGuide(
-                name: '에어컨',
-                status: '불필요',
-                time: null,
-                reason: '오늘은 에어컨 없이도 쾌적해요!',
-                setting: null,
-              ),
-            ];
-          }
+          _appliances = ApiParser.parseAppliances(applianceResponse);
 
           _isLoading = false;
         });
@@ -140,36 +79,8 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
           _error = 'API 데이터를 불러올 수 없습니다: ${e.toString()}';
           _isLoading = false;
           // 기본값 설정
-          _todayData = const TodayEnvironmentData(
-            minTemp: 8,
-            maxTemp: 22,
-            avgHumidity: 72,
-            eveningHumidity: 85,
-            currentHumidity: 62,
-          );
-          _appliances = [
-            const ApplianceGuide(
-              name: '제습기',
-              status: '필요',
-              time: '오후 6시 ~ 밤 11시',
-              reason: '저녁부터 습도가 80% 이상으로 올라가요.',
-              setting: '습도 55~60% 유지',
-            ),
-            const ApplianceGuide(
-              name: '난방',
-              status: '필요',
-              time: '새벽 5시 ~ 오전 8시',
-              reason: '새벽 기온이 8°C까지 떨어져요.',
-              setting: '20~22°C',
-            ),
-            const ApplianceGuide(
-              name: '에어컨',
-              status: '불필요',
-              time: null,
-              reason: '오늘은 에어컨 없이도 쾌적해요!',
-              setting: null,
-            ),
-          ];
+          _todayData = ApiParser.parseTodayEnvironment(null);
+          _appliances = ApiParser.parseAppliances(null);
         });
       }
     }
@@ -181,39 +92,11 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
 
   @override
   Widget build(BuildContext context) {
-    final todayData =
-        _todayData ?? const TodayEnvironmentData(
-      minTemp: 8,
-      maxTemp: 22,
-      avgHumidity: 72,
-      eveningHumidity: 85,
-      currentHumidity: 62,
-    );
+    final todayData = _todayData ??
+        ApiParser.parseTodayEnvironment(null);
     final appliances = _appliances.isNotEmpty
         ? _appliances
-        : [
-            const ApplianceGuide(
-              name: '제습기',
-              status: '필요',
-              time: '오후 6시 ~ 밤 11시',
-              reason: '저녁부터 습도가 80% 이상으로 올라가요.',
-              setting: '습도 55~60% 유지',
-            ),
-            const ApplianceGuide(
-              name: '난방',
-              status: '필요',
-              time: '새벽 5시 ~ 오전 8시',
-              reason: '새벽 기온이 8°C까지 떨어져요.',
-              setting: '20~22°C',
-            ),
-            const ApplianceGuide(
-              name: '에어컨',
-              status: '불필요',
-              time: null,
-              reason: '오늘은 에어컨 없이도 쾌적해요!',
-              setting: null,
-            ),
-          ];
+        : ApiParser.parseAppliances(null);
 
     return RefreshIndicator(
       onRefresh: _refreshData,
