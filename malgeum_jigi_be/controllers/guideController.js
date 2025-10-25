@@ -3,13 +3,14 @@ import { getCurrentWeather, getDustInfo } from "../services/kmaService.js";
 import { generateVentilationScore, generateOutdoorGuide } from "../services/openaiService.js";
 
 export async function getVentilationScore(req, res) {
-  const { latitude, longitude, location } = req.query;
+  const { latitude, longitude, location_name } = req.query;
+  const location = location_name || "현재 위치";
 
-  if (!latitude || !longitude || !location) {
+  if (!latitude || !longitude) {
     return res.status(400).json({
       success: false,
       code: "INVALID_REQUEST",
-      message: "latitude, longitude, location 파라미터가 필요합니다.",
+      message: "latitude, longitude 파라미터가 필요합니다.",
     });
   }
 

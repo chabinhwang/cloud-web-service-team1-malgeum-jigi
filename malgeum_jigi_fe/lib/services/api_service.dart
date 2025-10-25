@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiService {
   // 런타임에 .env에서 API_BASE_URL을 읽음
   static String get baseUrl {
-    return dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080/api/v1';
+    return dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api';
   }
 
   static const int _maxRetries = 3;
@@ -25,10 +25,10 @@ class ApiService {
           'longitude': longitude.toString(),
         };
         if (locationName != null) {
-          queryParams['location_name'] = locationName;
+          queryParams['location'] = locationName;
         }
 
-        final uri = Uri.parse('$baseUrl/ventilation/score')
+        final uri = Uri.parse('$baseUrl/guides/ventilation')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
           const Duration(seconds: 10),
@@ -54,7 +54,7 @@ class ApiService {
           'include_forecast': includeForecast.toString(),
         };
 
-        final uri = Uri.parse('$baseUrl/air-quality')
+        final uri = Uri.parse('$baseUrl/weather/current')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
           const Duration(seconds: 10),
@@ -78,7 +78,7 @@ class ApiService {
           'longitude': longitude.toString(),
         };
 
-        final uri = Uri.parse('$baseUrl/outdoor-guide')
+        final uri = Uri.parse('$baseUrl/guides/outdoor')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
           const Duration(seconds: 10),
@@ -102,7 +102,7 @@ class ApiService {
           'longitude': longitude.toString(),
         };
 
-        final uri = Uri.parse('$baseUrl/environment/today')
+        final uri = Uri.parse('$baseUrl/weather/today')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
           const Duration(seconds: 10),
@@ -126,7 +126,7 @@ class ApiService {
           'longitude': longitude.toString(),
         };
 
-        final uri = Uri.parse('$baseUrl/appliance-guide')
+        final uri = Uri.parse('$baseUrl/guides/appliances')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
           const Duration(seconds: 10),
@@ -152,7 +152,7 @@ class ApiService {
           'days': days.toString(),
         };
 
-        final uri = Uri.parse('$baseUrl/weekly-plan')
+        final uri = Uri.parse('$baseUrl/guides/weekly')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
           const Duration(seconds: 10),
