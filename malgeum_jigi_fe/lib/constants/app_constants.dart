@@ -152,4 +152,16 @@ class AppConstants {
 
   /// 기본 갭 (위젯 간 거리)
   static const double defaultGap = 8.0;
+
+  // ============================================
+  // Navigation Bar (네비게이션 바)
+  // ============================================
+  /// 모바일 하단 네비게이션 바 좌우 패딩
+  static const double mobileNavHorizontalPadding = 100.0;
+
+  /// 모바일 하단 네비게이션 바 하단 패딩
+  static const double mobileNavBottomPadding = 16.0;
+
+  /// 모바일 하단 네비게이션 바 둥근 모서리
+  static const double mobileNavBorderRadius = 30.0;
 }
