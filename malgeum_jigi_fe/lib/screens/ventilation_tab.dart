@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive_util.dart';
+import '../utils/location_provider.dart';
 import '../widgets/tab_header.dart';
 import '../widgets/radial_gauge.dart';
 import '../models/air_quality_data.dart';
+import '../services/api_service.dart';
 
 class VentilationTab extends StatefulWidget {
   final ScrollController scrollController;
@@ -18,16 +21,110 @@ class VentilationTab extends StatefulWidget {
 class _VentilationTabState extends State<VentilationTab> {
   bool _showDetails = false;
   bool _showOutdoorGuide = false;
+  bool _isLoading = false;
+  String? _error;
 
-  // Mock data
-  final int ventilationScore = 78;
-  final AirQualityData airQualityData = const AirQualityData(
-    pm10: 45,
-    pm25: 22,
-    temperature: 18,
-    humidity: 62,
-    precipitation: false,
-  );
+  int? _ventilationScore;
+  AirQualityData? _airQualityData;
+  Map<String, dynamic>? _outdoorGuideData;
+
+  @override
+  void initState() {
+    super.initState();
+    // 빌드가 완료된 후에 데이터 로드 (Provider 상태 변경 에러 방지)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final locationProvider =
+          context.read<LocationProvider>();
+
+      // 실제 사용자 위치 수집 시도
+      bool hasLocation = await locationProvider.getCurrentLocation();
+
+      // 위치 수집 실패시 기본값 설정
+      if (!hasLocation) {
+        locationProvider.setDefaultLocation();
+      }
+
+      // API 호출
+      final scoreData = await ApiService.getVentilationScore(
+        latitude: locationProvider.latitude!,
+        longitude: locationProvider.longitude!,
+        locationName: locationProvider.locationName,
+      );
+
+      final airQualityResponse = await ApiService.getAirQuality(
+        latitude: locationProvider.latitude!,
+        longitude: locationProvider.longitude!,
+        includeForecast: false,
+      );
+
+      final outdoorGuideResponse = await ApiService.getOutdoorGuide(
+        latitude: locationProvider.latitude!,
+        longitude: locationProvider.longitude!,
+      );
+
+      if (mounted) {
+        setState(() {
+          _ventilationScore = scoreData?['score'] as int? ?? 78;
+
+          // 공기질 데이터 파싱
+          if (airQualityResponse != null) {
+            final currentData = airQualityResponse['current'];
+            _airQualityData = AirQualityData(
+              pm10: (currentData['pm10'] as num?)?.toDouble() ?? 45,
+              pm25: (currentData['pm25'] as num?)?.toDouble() ?? 22,
+              temperature:
+                  (currentData['temperature'] as num?)?.toDouble() ?? 18,
+              humidity: (currentData['humidity'] as num?)?.toDouble() ?? 62,
+              precipitation: currentData['precipitation'] as bool? ?? false,
+            );
+          } else {
+            // 기본값 설정
+            _airQualityData = const AirQualityData(
+              pm10: 45,
+              pm25: 22,
+              temperature: 18,
+              humidity: 62,
+              precipitation: false,
+            );
+          }
+
+          _outdoorGuideData = outdoorGuideResponse;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'API 데이터를 불러올 수 없습니다: ${e.toString()}';
+          _isLoading = false;
+          // 기본값 설정 (오류 시)
+          _ventilationScore = 78;
+          _airQualityData = const AirQualityData(
+            pm10: 45,
+            pm25: 22,
+            temperature: 18,
+            humidity: 62,
+            precipitation: false,
+          );
+        });
+      }
+    }
+  }
+
+  Future<void> _refreshData() async {
+    await _loadData();
+  }
 
   Color _getScoreColor(int score) {
     return AppTheme.getScoreColor(score);
@@ -44,9 +141,11 @@ class _VentilationTabState extends State<VentilationTab> {
     final now = DateTime.now();
     final dateFormat = DateFormat('yyyy년 MM월 dd일 EEEE a h:mm', 'ko_KR');
 
-    return CustomScrollView(
-      controller: widget.scrollController,
-      slivers: [
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      child: CustomScrollView(
+        controller: widget.scrollController,
+        slivers: [
         TabHeader(
           title: '실시간 환기 가이드',
           backgroundImage:
@@ -68,7 +167,7 @@ class _VentilationTabState extends State<VentilationTab> {
                       style: TextStyle(
                         fontSize:
                             14 * ResponsiveUtil.getTextScaleFactor(context),
-                        color: Colors.grey[600],
+                        color: AppTheme.getLocationTimeTextColor(Theme.of(context).brightness),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -77,28 +176,28 @@ class _VentilationTabState extends State<VentilationTab> {
                       style: TextStyle(
                         fontSize:
                             14 * ResponsiveUtil.getTextScaleFactor(context),
-                        color: Colors.grey[600],
+                        color: AppTheme.getLocationTimeTextColor(Theme.of(context).brightness),
                       ),
                     ),
                     const SizedBox(height: 24),
 
                     // Ventilation Score Card (Material 3)
                     Card(
-                      elevation: 0,
+                      elevation: 2,
+                      shadowColor: const Color(0x140D0A2C),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: AppTheme.getScoreBackgroundColor(
-                            ventilationScore,
-                          ),
-                          width: 1.5,
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
                         ),
                       ),
-                      color: AppTheme.getScoreBackgroundColor(ventilationScore)
-                          .withValues(alpha: 0.4),
+                      color: AppTheme.getScoreBackgroundColor(
+                              _ventilationScore ?? 78)
+                          .withValues(alpha: 0.5),
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(24),
                         child: Column(
                           children: [
                             Text(
@@ -107,29 +206,29 @@ class _VentilationTabState extends State<VentilationTab> {
                                 fontSize:
                                     16 *
                                     ResponsiveUtil.getTextScaleFactor(context),
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
                               ),
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              '$ventilationScore',
+                              '${_ventilationScore ?? 78}',
                               style: TextStyle(
                                 fontSize:
                                     80 *
                                     ResponsiveUtil.getTextScaleFactor(context),
                                 fontWeight: FontWeight.bold,
-                                color: _getScoreColor(ventilationScore),
+                                color: _getScoreColor(_ventilationScore ?? 78),
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              _getScoreStatus(ventilationScore),
+                              _getScoreStatus(_ventilationScore ?? 78),
                               style: TextStyle(
                                 fontSize:
                                     24 *
                                     ResponsiveUtil.getTextScaleFactor(context),
                                 fontWeight: FontWeight.w600,
-                                color: _getScoreColor(ventilationScore),
+                                color: _getScoreColor(_ventilationScore ?? 78),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -139,7 +238,7 @@ class _VentilationTabState extends State<VentilationTab> {
                                 fontSize:
                                     18 *
                                     ResponsiveUtil.getTextScaleFactor(context),
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -162,7 +261,7 @@ class _VentilationTabState extends State<VentilationTab> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('상세 정보 보기'),
+                          const Text('상세 정보 보기'),
                           const SizedBox(width: 8),
                           Icon(
                             _showDetails
@@ -176,10 +275,14 @@ class _VentilationTabState extends State<VentilationTab> {
 
                     // Detailed Information (Material 3)
                     AnimatedCrossFade(
-                      firstChild: SizedBox.shrink(),
+                      firstChild: const SizedBox.shrink(),
                       secondChild: Card(
                         margin: const EdgeInsets.only(top: 16),
-                        elevation: 0,
+                        elevation: 2,
+                        shadowColor: const Color(0x140D0A2C),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -199,29 +302,29 @@ class _VentilationTabState extends State<VentilationTab> {
                               const SizedBox(height: 16),
                               _buildDetailItem(
                                 '미세먼지 (PM10)',
-                                '${airQualityData.pm10.toStringAsFixed(0)} ㎍/㎥',
-                                '보통 🟡',
+                                '${_airQualityData?.pm10.toStringAsFixed(0) ?? '45'} ㎍/㎥',
+                                _airQualityData?.getPM10Status() ?? '보통',
                                 AppTheme.lightYellow,
                               ),
                               const SizedBox(height: 12),
                               _buildDetailItem(
                                 '초미세먼지 (PM2.5)',
-                                '${airQualityData.pm25.toStringAsFixed(0)} ㎍/㎥',
-                                '보통 🟡',
+                                '${_airQualityData?.pm25.toStringAsFixed(0) ?? '22'} ㎍/㎥',
+                                _airQualityData?.getPM25Status() ?? '보통',
                                 AppTheme.lightYellow,
                               ),
                               const SizedBox(height: 12),
                               _buildDetailItem(
                                 '기온',
-                                '${airQualityData.temperature.toStringAsFixed(0)}°C',
-                                '쾌적 🟢',
+                                '${_airQualityData?.temperature.toStringAsFixed(0) ?? '18'}°C',
+                                _airQualityData?.getTemperatureStatus() ?? '쾌적',
                                 AppTheme.lightGreen,
                               ),
                               const SizedBox(height: 12),
                               _buildDetailItem(
                                 '습도',
-                                '${airQualityData.humidity.toStringAsFixed(0)}%',
-                                '적정 🟢',
+                                '${_airQualityData?.humidity.toStringAsFixed(0) ?? '62'}%',
+                                _airQualityData?.getHumidityStatus() ?? '적정',
                                 AppTheme.lightGreen,
                               ),
                             ],
@@ -245,14 +348,24 @@ class _VentilationTabState extends State<VentilationTab> {
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 48),
                         backgroundColor: _showOutdoorGuide
-                            ? AppTheme.primaryBlue
-                            : Colors.white,
+                            ? (Theme.of(context).brightness == Brightness.dark
+                                ? AppTheme.darkPrimaryBlue
+                                : AppTheme.primaryBlue)
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? AppTheme.darkSurfaceColor
+                                : Colors.white),
                         foregroundColor: _showOutdoorGuide
                             ? Colors.white
-                            : AppTheme.primaryBlue,
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? AppTheme.darkPrimaryBlue
+                                : AppTheme.primaryBlue),
                         side: _showOutdoorGuide
                             ? null
-                            : const BorderSide(color: AppTheme.primaryBlue),
+                            : BorderSide(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? AppTheme.darkPrimaryBlue
+                                    : AppTheme.primaryBlue,
+                              ),
                       ),
                       child: Text(
                         _showOutdoorGuide ? '외출 가이드 닫기' : '외출 가이드 보기',
@@ -261,9 +374,14 @@ class _VentilationTabState extends State<VentilationTab> {
 
                     // Outdoor Guide
                     AnimatedCrossFade(
-                      firstChild: SizedBox.shrink(),
+                      firstChild: const SizedBox.shrink(),
                       secondChild: Card(
                         margin: const EdgeInsets.only(top: 16),
+                        elevation: 2,
+                        shadowColor: const Color(0x140D0A2C),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -282,7 +400,7 @@ class _VentilationTabState extends State<VentilationTab> {
                               const SizedBox(height: 24),
                               // PM10 Gauge
                               RadialGauge(
-                                value: airQualityData.pm10,
+                                value: _airQualityData?.pm10 ?? 45,
                                 maxValue: 250,
                                 size: 200,
                                 label: 'PM10',
@@ -292,11 +410,11 @@ class _VentilationTabState extends State<VentilationTab> {
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.lightGreen.withValues(alpha: 0.5),
+                                  color: AppTheme.lightGreen.withValues(alpha: 0.6),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: AppTheme.lightGreen.withValues(alpha: 0.8),
-                                    width: 1,
+                                    color: Colors.transparent,
+                                    width: 0,
                                   ),
                                 ),
                                 child: Column(
@@ -322,7 +440,7 @@ class _VentilationTabState extends State<VentilationTab> {
                                             ResponsiveUtil.getTextScaleFactor(
                                               context,
                                             ),
-                                        color: AppTheme.textSecondary,
+                                        color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -378,7 +496,8 @@ class _VentilationTabState extends State<VentilationTab> {
           ),
         ),
       ],
-    );
+        ),
+      );
   }
 
   Widget _buildDetailItem(
@@ -390,11 +509,11 @@ class _VentilationTabState extends State<VentilationTab> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: backgroundColor.withValues(alpha: 0.5),
+        color: backgroundColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: backgroundColor.withValues(alpha: 0.8),
-          width: 1,
+          color: Colors.transparent,
+          width: 0,
         ),
       ),
       child: Row(
@@ -416,7 +535,7 @@ class _VentilationTabState extends State<VentilationTab> {
                 status,
                 style: TextStyle(
                   fontSize: 12 * ResponsiveUtil.getTextScaleFactor(context),
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.getSecondaryTextColor(Theme.of(context).brightness),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -443,11 +562,11 @@ class _VentilationTabState extends State<VentilationTab> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: backgroundColor.withValues(alpha: 0.5),
+        color: backgroundColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: backgroundColor.withValues(alpha: 0.8),
-          width: 1,
+          color: Colors.transparent,
+          width: 0,
         ),
       ),
       child: Row(
@@ -464,7 +583,7 @@ class _VentilationTabState extends State<VentilationTab> {
               text,
               style: TextStyle(
                 fontSize: 14 * ResponsiveUtil.getTextScaleFactor(context),
-                color: AppTheme.textSecondary,
+                color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
               ),
             ),
           ),

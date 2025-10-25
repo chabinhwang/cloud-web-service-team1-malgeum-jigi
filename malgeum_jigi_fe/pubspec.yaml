@@ -44,6 +44,18 @@ dependencies:
   # Modern Google-style navigation bar
   google_nav_bar: ^5.0.7
 
+  # Persistent storage for app settings (dark mode preference)
+  shared_preferences: ^2.2.2
+
+  # State management with Provider
+  provider: ^6.1.2
+
+  # Geolocation for getting user's current location
+  geolocator: ^9.0.2
+
+  # Environment variables management
+  flutter_dotenv: ^5.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -65,6 +77,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:

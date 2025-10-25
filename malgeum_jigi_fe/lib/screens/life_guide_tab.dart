@@ -1,20 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive_util.dart';
+import '../utils/location_provider.dart';
 import '../widgets/tab_header.dart';
 import '../widgets/status_badge.dart';
 import '../models/weekly_plan.dart';
+import '../services/api_service.dart';
 
-class LifeGuideTab extends StatelessWidget {
+class LifeGuideTab extends StatefulWidget {
   final ScrollController scrollController;
 
   const LifeGuideTab({super.key, required this.scrollController});
 
   @override
-  Widget build(BuildContext context) {
-    // Mock data
-    final weeklyPlan = [
+  State<LifeGuideTab> createState() => _LifeGuideTabState();
+}
+
+class _LifeGuideTabState extends State<LifeGuideTab> {
+  bool _isLoading = false;
+  String? _error;
+  List<DayPlan> _weeklyPlan = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // 빌드가 완료된 후에 데이터 로드 (Provider 상태 변경 에러 방지)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final locationProvider = context.read<LocationProvider>();
+
+      // 실제 사용자 위치 수집 시도
+      bool hasLocation = await locationProvider.getCurrentLocation();
+
+      // 위치 수집 실패시 기본값 설정
+      if (!hasLocation) {
+        locationProvider.setDefaultLocation();
+      }
+
+      // API 호출
+      final weeklyPlanResponse = await ApiService.getWeeklyPlan(
+        latitude: locationProvider.latitude!,
+        longitude: locationProvider.longitude!,
+        days: 7,
+      );
+
+      if (mounted) {
+        setState(() {
+          // 주간 계획 데이터 파싱
+          if (weeklyPlanResponse != null) {
+            final weekPlansList =
+                weeklyPlanResponse['week_plans'] as List<dynamic>? ?? [];
+            _weeklyPlan = weekPlansList
+                .map((e) => DayPlan(
+                      date: e['date'] as String,
+                      dayOfWeek: e['day_of_week'] as String,
+                      isToday: e['is_today'] as bool? ?? false,
+                      activities: (e['activities'] as List<dynamic>? ?? [])
+                          .map((activity) => Activity(
+                                type: ActivityType.values.firstWhere(
+                                  (et) => et.name == activity['type'],
+                                  orElse: () => ActivityType.indoor,
+                                ),
+                                emoji: activity['emoji'] as String,
+                                title: activity['title'] as String,
+                                status: ActivityStatus.values.firstWhere(
+                                  (es) => es.name == activity['status'],
+                                  orElse: () => ActivityStatus.recommended,
+                                ),
+                                time: activity['time'] as String?,
+                                reason: activity['reason'] as String,
+                              ))
+                          .toList(),
+                    ))
+                .toList();
+          } else {
+            // 기본값 설정 - 목업 데이터 유지
+            _weeklyPlan = _getMockWeeklyPlan();
+          }
+
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'API 데이터를 불러올 수 없습니다: ${e.toString()}';
+          _isLoading = false;
+          // 기본값 설정
+          _weeklyPlan = _getMockWeeklyPlan();
+        });
+      }
+    }
+  }
+
+  List<DayPlan> _getMockWeeklyPlan() {
+    return [
       const DayPlan(
         date: '10/17',
         dayOfWeek: '금요일',
@@ -143,16 +235,27 @@ class LifeGuideTab extends StatelessWidget {
         ],
       ),
     ];
+  }
 
-    return CustomScrollView(
-      controller: scrollController,
-      slivers: [
+  Future<void> _refreshData() async {
+    await _loadData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final weeklyPlan = _weeklyPlan.isEmpty ? _getMockWeeklyPlan() : _weeklyPlan;
+
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      child: CustomScrollView(
+        controller: widget.scrollController,
+        slivers: [
         TabHeader(
           title: '생활 맞춤 가이드',
           backgroundImage:
               'https://images.unsplash.com/photo-1549582100-d67ab35b3507',
           subtitle: '일주일 생활 계획을 한눈에',
-          scrollController: scrollController,
+          scrollController: widget.scrollController,
         ),
         SliverToBoxAdapter(
           child: Center(
@@ -177,7 +280,7 @@ class LifeGuideTab extends StatelessWidget {
                       style: TextStyle(
                         fontSize:
                             14 * ResponsiveUtil.getTextScaleFactor(context),
-                        color: Colors.grey[600],
+                        color: AppTheme.getLocationTimeTextColor(Theme.of(context).brightness),
                       ),
                     ),
                     const SizedBox(height: AppConstants.spacingXlarge),
@@ -239,13 +342,14 @@ class LifeGuideTab extends StatelessWidget {
 
                     // Tips Section (Material 3)
                     Card(
-                      elevation: 0,
+                      elevation: 2,
+                      shadowColor: const Color(0x140D0A2C),
                       color: const Color(0xFFFAF5FF).withValues(alpha: 0.5), // purple-50
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: const Color(0xFFD8B4FE).withValues(alpha: 0.8), // purple-300
-                          width: 1,
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
                         ),
                       ),
                       child: Padding(
@@ -281,7 +385,7 @@ class LifeGuideTab extends StatelessWidget {
                                           ResponsiveUtil.getTextScaleFactor(
                                             context,
                                           ),
-                                      color: AppTheme.textSecondary,
+                                      color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
                                     ),
                                   ),
                                 ],
@@ -301,17 +405,19 @@ class LifeGuideTab extends StatelessWidget {
           ),
         ),
       ],
-    );
+        ),
+      );
   }
 
   Widget _buildActivityCard(Activity activity, BuildContext context) {
     return Card(
-      elevation: 0,
+      elevation: 2,
+      shadowColor: const Color(0x140D0A2C),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-        side: BorderSide(
-          color: activity.status.getBorderColor().withValues(alpha: 0.7),
-          width: 1,
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(
+          color: Colors.transparent,
+          width: 0,
         ),
       ),
       color: activity.status.getBadgeColor().withValues(alpha: 0.4),
@@ -358,7 +464,7 @@ class LifeGuideTab extends StatelessWidget {
                           style: TextStyle(
                             fontSize:
                                 12 * ResponsiveUtil.getTextScaleFactor(context),
-                            color: Colors.grey[600],
+                            color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
                           ),
                         ),
                         Text(
@@ -367,6 +473,7 @@ class LifeGuideTab extends StatelessWidget {
                             fontSize:
                                 12 * ResponsiveUtil.getTextScaleFactor(context),
                             fontWeight: FontWeight.w600,
+                            color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
                           ),
                         ),
                       ],
@@ -381,7 +488,7 @@ class LifeGuideTab extends StatelessWidget {
                         style: TextStyle(
                           fontSize:
                               12 * ResponsiveUtil.getTextScaleFactor(context),
-                          color: Colors.grey[600],
+                          color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
                         ),
                       ),
                       Expanded(
@@ -390,7 +497,7 @@ class LifeGuideTab extends StatelessWidget {
                           style: TextStyle(
                             fontSize:
                                 12 * ResponsiveUtil.getTextScaleFactor(context),
-                            color: Colors.grey[700],
+                            color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
                           ),
                         ),
                       ),
