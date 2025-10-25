@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/responsive_util.dart';
+import '../radial_gauge.dart';
 
 /// 외출 가이드를 표시하는 카드 위젯
 class OutdoorGuideCard extends StatelessWidget {
@@ -75,6 +76,13 @@ class OutdoorGuideCard extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               // PM10 Gauge는 기존 RadialGauge 위젯 사용
+              RadialGauge(
+                value: pmValue,
+                maxValue: 250,
+                size: 200,
+                strokeWidth: 20,
+                label: 'PM10 농도',
+              ),
               const SizedBox(height: 24),
               // Guide container
               Container(
