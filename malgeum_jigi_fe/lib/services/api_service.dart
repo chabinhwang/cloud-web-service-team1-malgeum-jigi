@@ -102,7 +102,7 @@ class ApiService {
           'longitude': longitude.toString(),
         };
 
-        final uri = Uri.parse('$baseUrl/weather/current')
+        final uri = Uri.parse('$baseUrl/weather/today')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
           const Duration(seconds: 10),
