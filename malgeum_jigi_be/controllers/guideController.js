@@ -44,7 +44,7 @@ export async function getVentilationScore(req, res) {
 
     res.json(response);
   } catch (error) {
-    console.error("🚨 /ventilation/score Error:", error.message);
+    console.error("🚨 /api/guides/ventilation Error:", error.message);
     res.status(500).json({
       success: false,
       code: "SERVER_ERROR",
@@ -93,7 +93,7 @@ export async function getOutdoorGuide(req, res) {
 
     res.json(response);
   } catch (error) {
-    console.error("🚨 /outdoor-guide Error:", error.message);
+    console.error("🚨 /api/guides/outdoor Error:", error.message);
     res.status(500).json({
       success: false,
       code: "SERVER_ERROR",
