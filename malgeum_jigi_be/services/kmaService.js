@@ -37,7 +37,7 @@ function getTodayDateString() {
   return `${year}${month}${day}`;
 }
 
-// 단기예보
+// 현재 기상 정보
 export async function getCurrentWeather(lat, lon, address) {
   try {
     // 1️⃣ 위경도 → 기상청 지점번호(stn)
@@ -89,7 +89,7 @@ export async function getDustInfo(lat, lon, address) {
     const tm = formatDateToKmaTm(getClosestPastHour());
 
     // 3️⃣ 요청 URL 구성
-    const url = `https://apihub.kma.go.kr/api/typ01/url/kma_pm10.php?tm1=${tm}&tm2=${tm}&stn=${stn}&authKey=${KMA_KEY}`;
+    const url = `https://apihub.kma.go.kr/api/typ01/url/kma_pm10.php?tm1=${tm}&tm2=${tm}&stn=108&authKey=${KMA_KEY}`;
 
     // 4️⃣ API 요청
     const response = await axios.get(url);
