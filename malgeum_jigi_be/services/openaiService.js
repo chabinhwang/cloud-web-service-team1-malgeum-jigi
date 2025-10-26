@@ -140,7 +140,6 @@ export async function generateApplianceGuide(weatherData) {
 
   try {
     const jsonText = completion.choices[0].message.content.trim();
-    console.log("Appliance Guide JSON:", jsonText);
     return JSON.parse(jsonText);
   } catch (err) {
     console.error("⚠️ OpenAI 응답 파싱 오류:", err);
