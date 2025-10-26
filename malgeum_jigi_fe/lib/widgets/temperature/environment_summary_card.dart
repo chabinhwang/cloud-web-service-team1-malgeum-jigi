@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/responsive_util.dart';
 import '../../models/air_quality_data.dart';
+import '../common/app_card.dart';
 
 /// 오늘의 환경 요약 카드 위젯
 class EnvironmentSummaryCard extends StatelessWidget {
@@ -11,18 +12,11 @@ class EnvironmentSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shadowColor: const Color(0x140D0A2C),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Colors.transparent, width: 0),
-      ),
-      color: AppTheme.lightBlue.withValues(alpha: 0.5),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
+    return AppCard(
+      backgroundColor: AppTheme.lightBlue.withValues(alpha: 0.5),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
             Text(
               '오늘의 환경 요약',
               style: TextStyle(
@@ -148,7 +142,6 @@ class EnvironmentSummaryCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }

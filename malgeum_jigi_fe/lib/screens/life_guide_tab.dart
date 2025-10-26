@@ -7,6 +7,7 @@ import '../utils/location_provider.dart';
 import '../utils/api_parser.dart';
 import '../widgets/tab_header.dart';
 import '../widgets/status_badge.dart';
+import '../widgets/common/app_card.dart';
 import '../models/weekly_plan.dart';
 import '../services/api_service.dart';
 
@@ -198,63 +199,49 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
                       }),
 
                       // Tips Section (Material 3)
-                      Card(
-                        elevation: 2,
-                        shadowColor: const Color(0x140D0A2C),
-                        color: const Color(
-                          0xFFFAF5FF,
-                        ).withValues(alpha: 0.5), // purple-50
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(
-                            color: Colors.transparent,
-                            width: 0,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('🌟', style: TextStyle(fontSize: 24)),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '생활 팁',
-                                      style: TextStyle(
-                                        fontSize:
-                                            16 *
-                                            ResponsiveUtil.getTextScaleFactor(
-                                              context,
-                                            ),
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textPrimary,
-                                      ),
+                      AppCard(
+                        backgroundColor: const Color(0xFFFAF5FF).withValues(alpha: 0.5),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('🌟', style: TextStyle(fontSize: 24)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '생활 팁',
+                                    style: TextStyle(
+                                      fontSize:
+                                          16 *
+                                          ResponsiveUtil.getTextScaleFactor(
+                                            context,
+                                          ),
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.textPrimary,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '일주일 계획을 미리 확인하고, 빨래나 환기 청소는 공기질이 좋은 날을 활용하세요. '
-                                      '건강한 생활을 위해 미세먼지가 나쁜 날은 실내 활동을 추천드려요!',
-                                      style: TextStyle(
-                                        fontSize:
-                                            14 *
-                                            ResponsiveUtil.getTextScaleFactor(
-                                              context,
-                                            ),
-                                        color:
-                                            AppTheme.getRecommendationTextColor(
-                                              Theme.of(context).brightness,
-                                            ),
-                                      ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '일주일 계획을 미리 확인하고, 빨래나 환기 청소는 공기질이 좋은 날을 활용하세요. '
+                                    '건강한 생활을 위해 미세먼지가 나쁜 날은 실내 활동을 추천드려요!',
+                                    style: TextStyle(
+                                      fontSize:
+                                          14 *
+                                          ResponsiveUtil.getTextScaleFactor(
+                                            context,
+                                          ),
+                                      color:
+                                          AppTheme.getRecommendationTextColor(
+                                            Theme.of(context).brightness,
+                                          ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(
@@ -272,82 +259,47 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
   }
 
   Widget _buildActivityCard(Activity activity, BuildContext context) {
-    return Card(
-      elevation: 2,
-      shadowColor: const Color(0x140D0A2C),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Colors.transparent, width: 0),
-      ),
-      color: activity.status.getBadgeColor().withValues(alpha: 0.4),
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.spacingLarge),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              activity.emoji,
-              style: const TextStyle(fontSize: AppConstants.iconSizeXlarge),
-            ),
-            const SizedBox(width: AppConstants.spacingMedium),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        activity.title,
-                        style: TextStyle(
-                          fontSize:
-                              16 * ResponsiveUtil.getTextScaleFactor(context),
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: AppConstants.spacingSmall),
-                      StatusBadge(
-                        status: activity.status,
-                        label: activity.statusLabel,
+    return AppCard(
+      backgroundColor: activity.status.getBadgeColor().withValues(alpha: 0.4),
+      padding: const EdgeInsets.all(AppConstants.spacingLarge),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            activity.emoji,
+            style: const TextStyle(fontSize: AppConstants.iconSizeXlarge),
+          ),
+          const SizedBox(width: AppConstants.spacingMedium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      activity.title,
+                      style: TextStyle(
                         fontSize:
-                            12 * ResponsiveUtil.getTextScaleFactor(context),
+                            16 * ResponsiveUtil.getTextScaleFactor(context),
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
                       ),
-                    ],
-                  ),
-                  if (activity.time != null) ...[
-                    const SizedBox(height: AppConstants.spacingSmall),
-                    Row(
-                      children: [
-                        Text(
-                          '시간: ',
-                          style: TextStyle(
-                            fontSize:
-                                12 * ResponsiveUtil.getTextScaleFactor(context),
-                            color: AppTheme.getRecommendationTextColor(
-                              Theme.of(context).brightness,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          activity.time!,
-                          style: TextStyle(
-                            fontSize:
-                                12 * ResponsiveUtil.getTextScaleFactor(context),
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.getRecommendationTextColor(
-                              Theme.of(context).brightness,
-                            ),
-                          ),
-                        ),
-                      ],
+                    ),
+                    const SizedBox(width: AppConstants.spacingSmall),
+                    StatusBadge(
+                      status: activity.status,
+                      label: activity.statusLabel,
+                      fontSize:
+                          12 * ResponsiveUtil.getTextScaleFactor(context),
                     ),
                   ],
+                ),
+                if (activity.time != null) ...[
                   const SizedBox(height: AppConstants.spacingSmall),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '이유: ',
+                        '시간: ',
                         style: TextStyle(
                           fontSize:
                               12 * ResponsiveUtil.getTextScaleFactor(context),
@@ -356,25 +308,52 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: Text(
-                          '"${activity.reason}"',
-                          style: TextStyle(
-                            fontSize:
-                                12 * ResponsiveUtil.getTextScaleFactor(context),
-                            color: AppTheme.getRecommendationTextColor(
-                              Theme.of(context).brightness,
-                            ),
+                      Text(
+                        activity.time!,
+                        style: TextStyle(
+                          fontSize:
+                              12 * ResponsiveUtil.getTextScaleFactor(context),
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.getRecommendationTextColor(
+                            Theme.of(context).brightness,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ],
-              ),
+                const SizedBox(height: AppConstants.spacingSmall),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '이유: ',
+                      style: TextStyle(
+                        fontSize:
+                            12 * ResponsiveUtil.getTextScaleFactor(context),
+                        color: AppTheme.getRecommendationTextColor(
+                          Theme.of(context).brightness,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '"${activity.reason}"',
+                        style: TextStyle(
+                          fontSize:
+                              12 * ResponsiveUtil.getTextScaleFactor(context),
+                          color: AppTheme.getRecommendationTextColor(
+                            Theme.of(context).brightness,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -118,13 +118,13 @@ extension ActivityStatusColors on ActivityStatus {
   Color getBorderColor() {
     switch (this) {
       case ActivityStatus.recommended:
-        return const Color(0xFFBBF7D0); // green-200
+        return AppTheme.activityRecommendedBorder;
       case ActivityStatus.optimal:
-        return const Color(0xFF93C5FD); // blue-300
+        return AppTheme.activityOptimalBorder;
       case ActivityStatus.caution:
-        return const Color(0xFFFDE68A); // yellow-200
+        return AppTheme.activityCautionBorder;
       case ActivityStatus.prohibited:
-        return const Color(0xFFFECACA); // red-200
+        return AppTheme.activityProhibitedBorder;
     }
   }
 
@@ -150,7 +150,7 @@ extension ActivityStatusColors on ActivityStatus {
       case ActivityStatus.optimal:
         return AppTheme.accentBlue;
       case ActivityStatus.caution:
-        return const Color(0xFFA16207); // yellow-700
+        return AppTheme.activityCautionText;
       case ActivityStatus.prohibited:
         return AppTheme.badRed;
     }
