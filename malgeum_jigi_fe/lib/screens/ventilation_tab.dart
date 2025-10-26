@@ -4,10 +4,14 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive_util.dart';
 import '../utils/location_provider.dart';
+import '../utils/api_parser.dart';
 import '../widgets/tab_header.dart';
-import '../widgets/radial_gauge.dart';
+import '../widgets/ventilation/ventilation_score_card.dart';
+import '../widgets/ventilation/air_quality_details_card.dart';
+import '../widgets/ventilation/outdoor_guide_card.dart';
 import '../models/air_quality_data.dart';
 import '../services/api_service.dart';
+import '../constants/app_constants.dart';
 
 class VentilationTab extends StatefulWidget {
   final ScrollController scrollController;
@@ -25,6 +29,7 @@ class _VentilationTabState extends State<VentilationTab> {
   String? _error;
 
   int? _ventilationScore;
+  String? _ventilationDescription;
   AirQualityData? _airQualityData;
   Map<String, dynamic>? _outdoorGuideData;
 
@@ -75,29 +80,24 @@ class _VentilationTabState extends State<VentilationTab> {
 
       if (mounted) {
         setState(() {
-          _ventilationScore = scoreData?['score'] as int? ?? 78;
-
-          // 공기질 데이터 파싱
-          if (airQualityResponse != null) {
-            final currentData = airQualityResponse['current'];
-            _airQualityData = AirQualityData(
-              pm10: (currentData['pm10'] as num?)?.toDouble() ?? 45,
-              pm25: (currentData['pm25'] as num?)?.toDouble() ?? 22,
-              temperature:
-                  (currentData['temperature'] as num?)?.toDouble() ?? 18,
-              humidity: (currentData['humidity'] as num?)?.toDouble() ?? 62,
-              precipitation: currentData['precipitation'] as bool? ?? false,
+          // 환기 점수 데이터 파싱
+          if (scoreData != null) {
+            _ventilationScore = ApiParser.parseInt(
+              scoreData['score'],
+              AppConstants.defaultVentilationScore,
+            );
+            _ventilationDescription = ApiParser.parseString(
+              scoreData['description'],
+              AppConstants.defaultVentilationDescription,
             );
           } else {
-            // 기본값 설정
-            _airQualityData = const AirQualityData(
-              pm10: 45,
-              pm25: 22,
-              temperature: 18,
-              humidity: 62,
-              precipitation: false,
-            );
+            _ventilationScore = AppConstants.defaultVentilationScore;
+            _ventilationDescription =
+                AppConstants.defaultVentilationDescription;
           }
+
+          // 공기질 데이터 파싱
+          _airQualityData = ApiParser.parseAirQuality(airQualityResponse);
 
           _outdoorGuideData = outdoorGuideResponse;
           _isLoading = false;
@@ -109,14 +109,10 @@ class _VentilationTabState extends State<VentilationTab> {
           _error = 'API 데이터를 불러올 수 없습니다: ${e.toString()}';
           _isLoading = false;
           // 기본값 설정 (오류 시)
-          _ventilationScore = 78;
-          _airQualityData = const AirQualityData(
-            pm10: 45,
-            pm25: 22,
-            temperature: 18,
-            humidity: 62,
-            precipitation: false,
-          );
+          _ventilationScore = AppConstants.defaultVentilationScore;
+          _ventilationDescription =
+              AppConstants.defaultVentilationDescription;
+          _airQualityData = ApiParser.parseAirQuality(null);
         });
       }
     }
@@ -126,17 +122,28 @@ class _VentilationTabState extends State<VentilationTab> {
     await _loadData();
   }
 
-  Color _getScoreColor(int score) {
-    return AppTheme.getScoreColor(score);
-  }
-
-  String _getScoreStatus(int score) {
-    if (score >= 70) return '좋음 😊';
-    if (score >= 40) return '보통 😐';
-    return '나쁨 😟';
-  }
 
   @override
+  Widget _buildLoadingState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 100.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 24),
+          Text(
+            '데이터를 불러오는 중...',
+            style: TextStyle(
+              fontSize: 16 * ResponsiveUtil.getTextScaleFactor(context),
+              color: AppTheme.getSecondaryTextColor(Theme.of(context).brightness),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final dateFormat = DateFormat('yyyy년 MM월 dd일 EEEE a h:mm', 'ko_KR');
@@ -159,11 +166,13 @@ class _VentilationTabState extends State<VentilationTab> {
               constraints: const BoxConstraints(maxWidth: 800),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
+                child: _isLoading
+                    ? _buildLoadingState()
+                    : Column(
                   children: [
                     // Current Location & Time
                     Text(
-                      '서울특별시 강남구',
+                      context.read<LocationProvider>().locationName ?? '현재 위치',
                       style: TextStyle(
                         fontSize:
                             14 * ResponsiveUtil.getTextScaleFactor(context),
@@ -181,70 +190,12 @@ class _VentilationTabState extends State<VentilationTab> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Ventilation Score Card (Material 3)
-                    Card(
-                      elevation: 2,
-                      shadowColor: const Color(0x140D0A2C),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: const BorderSide(
-                          color: Colors.transparent,
-                          width: 0,
-                        ),
-                      ),
-                      color: AppTheme.getScoreBackgroundColor(
-                              _ventilationScore ?? 78)
-                          .withValues(alpha: 0.5),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          children: [
-                            Text(
-                              '현재 환기 점수',
-                              style: TextStyle(
-                                fontSize:
-                                    16 *
-                                    ResponsiveUtil.getTextScaleFactor(context),
-                                color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '${_ventilationScore ?? 78}',
-                              style: TextStyle(
-                                fontSize:
-                                    80 *
-                                    ResponsiveUtil.getTextScaleFactor(context),
-                                fontWeight: FontWeight.bold,
-                                color: _getScoreColor(_ventilationScore ?? 78),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _getScoreStatus(_ventilationScore ?? 78),
-                              style: TextStyle(
-                                fontSize:
-                                    24 *
-                                    ResponsiveUtil.getTextScaleFactor(context),
-                                fontWeight: FontWeight.w600,
-                                color: _getScoreColor(_ventilationScore ?? 78),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '지금 창문을 열어도 좋습니다! 🪟',
-                              style: TextStyle(
-                                fontSize:
-                                    18 *
-                                    ResponsiveUtil.getTextScaleFactor(context),
-                                color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
+                    // Ventilation Score Card
+                    VentilationScoreCard(
+                      score: _ventilationScore ??
+                          AppConstants.defaultVentilationScore,
+                      description: _ventilationDescription ??
+                          AppConstants.defaultVentilationDescription,
                     ),
                     const SizedBox(height: 16),
 
@@ -273,68 +224,11 @@ class _VentilationTabState extends State<VentilationTab> {
                       ),
                     ),
 
-                    // Detailed Information (Material 3)
-                    AnimatedCrossFade(
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: Card(
-                        margin: const EdgeInsets.only(top: 16),
-                        elevation: 2,
-                        shadowColor: const Color(0x140D0A2C),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '상세 정보',
-                                style: TextStyle(
-                                  fontSize:
-                                      18 *
-                                      ResponsiveUtil.getTextScaleFactor(
-                                        context,
-                                      ),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildDetailItem(
-                                '미세먼지 (PM10)',
-                                '${_airQualityData?.pm10.toStringAsFixed(0) ?? '45'} ㎍/㎥',
-                                _airQualityData?.getPM10Status() ?? '보통',
-                                AppTheme.lightYellow,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildDetailItem(
-                                '초미세먼지 (PM2.5)',
-                                '${_airQualityData?.pm25.toStringAsFixed(0) ?? '22'} ㎍/㎥',
-                                _airQualityData?.getPM25Status() ?? '보통',
-                                AppTheme.lightYellow,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildDetailItem(
-                                '기온',
-                                '${_airQualityData?.temperature.toStringAsFixed(0) ?? '18'}°C',
-                                _airQualityData?.getTemperatureStatus() ?? '쾌적',
-                                AppTheme.lightGreen,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildDetailItem(
-                                '습도',
-                                '${_airQualityData?.humidity.toStringAsFixed(0) ?? '62'}%',
-                                _airQualityData?.getHumidityStatus() ?? '적정',
-                                AppTheme.lightGreen,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      crossFadeState: _showDetails
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      duration: const Duration(milliseconds: 300),
+                    // Detailed Information
+                    AirQualityDetailsCard(
+                      airQualityData: _airQualityData ??
+                          ApiParser.parseAirQuality(null),
+                      isExpanded: _showDetails,
                     ),
                     const SizedBox(height: 16),
 
@@ -373,118 +267,10 @@ class _VentilationTabState extends State<VentilationTab> {
                     ),
 
                     // Outdoor Guide
-                    AnimatedCrossFade(
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: Card(
-                        margin: const EdgeInsets.only(top: 16),
-                        elevation: 2,
-                        shadowColor: const Color(0x140D0A2C),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              Text(
-                                '외출 가이드',
-                                style: TextStyle(
-                                  fontSize:
-                                      18 *
-                                      ResponsiveUtil.getTextScaleFactor(
-                                        context,
-                                      ),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              // PM10 Gauge
-                              RadialGauge(
-                                value: _airQualityData?.pm10 ?? 45,
-                                maxValue: 250,
-                                size: 200,
-                                label: 'PM10',
-                              ),
-                              const SizedBox(height: 24),
-                              // Guide (Material 3)
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.lightGreen.withValues(alpha: 0.6),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.transparent,
-                                    width: 0,
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      '🚶 지금 외출 괜찮아요',
-                                      style: TextStyle(
-                                        fontSize:
-                                            18 *
-                                            ResponsiveUtil.getTextScaleFactor(
-                                              context,
-                                            ),
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      '오후 시간대는 미세먼지가 "보통" 수준이지만, 저녁 5시 이후로 조금씩 나빠질 예정이에요.',
-                                      style: TextStyle(
-                                        fontSize:
-                                            14 *
-                                            ResponsiveUtil.getTextScaleFactor(
-                                              context,
-                                            ),
-                                        color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                '권장사항',
-                                style: TextStyle(
-                                  fontSize:
-                                      16 *
-                                      ResponsiveUtil.getTextScaleFactor(
-                                        context,
-                                      ),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildRecommendationItem(
-                                '✅',
-                                '일반 외출 가능',
-                                AppTheme.lightGreen,
-                              ),
-                              const SizedBox(height: 8),
-                              _buildRecommendationItem(
-                                '⚠️',
-                                '장시간 야외 활동 시 마스크 휴대 권장',
-                                AppTheme.lightYellow,
-                              ),
-                              const SizedBox(height: 8),
-                              _buildRecommendationItem(
-                                '💧',
-                                '물 자주 마시기',
-                                AppTheme.lightBlue,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      crossFadeState: _showOutdoorGuide
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      duration: const Duration(milliseconds: 300),
+                    OutdoorGuideCard(
+                      outdoorGuideData: _outdoorGuideData,
+                      pmValue: _airQualityData?.pm10 ?? 45,
+                      isExpanded: _showOutdoorGuide,
                     ),
                     const SizedBox(
                       height: 80,
@@ -500,95 +286,4 @@ class _VentilationTabState extends State<VentilationTab> {
       );
   }
 
-  Widget _buildDetailItem(
-    String title,
-    String value,
-    String status,
-    Color backgroundColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: backgroundColor.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.transparent,
-          width: 0,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14 * ResponsiveUtil.getTextScaleFactor(context),
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                status,
-                style: TextStyle(
-                  fontSize: 12 * ResponsiveUtil.getTextScaleFactor(context),
-                  color: AppTheme.getSecondaryTextColor(Theme.of(context).brightness),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18 * ResponsiveUtil.getTextScaleFactor(context),
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecommendationItem(
-    String emoji,
-    String text,
-    Color backgroundColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: backgroundColor.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.transparent,
-          width: 0,
-        ),
-      ),
-      child: Row(
-        children: [
-          Text(
-            emoji,
-            style: TextStyle(
-              fontSize: 20 * ResponsiveUtil.getTextScaleFactor(context),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 14 * ResponsiveUtil.getTextScaleFactor(context),
-                color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -2,13 +2,14 @@ import { getCurrentWeather, getDustInfo, getGridXY, getTodayWeather, getWeeklyWe
 import { generateVentilationScore, generateOutdoorGuide, generateApplianceGuide, generateWeeklyGuide } from "../services/openaiService.js";
 
 export async function getVentilationScore(req, res) {
-  const { latitude, longitude, location } = req.query;
+  const { latitude, longitude, location_name } = req.query;
+  const location = location_name || "현재 위치";
 
-  if (!latitude || !longitude || !location) {
+  if (!latitude || !longitude) {
     return res.status(400).json({
       success: false,
       code: "INVALID_REQUEST",
-      message: "latitude, longitude, location 파라미터가 필요합니다.",
+      message: "latitude, longitude 파라미터가 필요합니다.",
     });
   }
 
@@ -42,7 +43,7 @@ export async function getVentilationScore(req, res) {
 
     res.json(response);
   } catch (error) {
-    console.error("🚨 /ventilation/score Error:", error.message);
+    console.error("🚨 /api/guides/ventilation Error:", error.message);
     res.status(500).json({
       success: false,
       code: "SERVER_ERROR",
@@ -91,7 +92,7 @@ export async function getOutdoorGuide(req, res) {
 
     res.json(response);
   } catch (error) {
-    console.error("🚨 /outdoor-guide Error:", error.message);
+    console.error("🚨 /api/guides/outdoor Error:", error.message);
     res.status(500).json({
       success: false,
       code: "SERVER_ERROR",

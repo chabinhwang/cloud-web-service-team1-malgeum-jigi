@@ -164,4 +164,43 @@ class AppConstants {
 
   /// 모바일 하단 네비게이션 바 둥근 모서리
   static const double mobileNavBorderRadius = 30.0;
+
+  // ============================================
+  // Default Data Values (기본 데이터값)
+  // ============================================
+  /// 기본 환기 점수
+  static const int defaultVentilationScore = 78;
+
+  /// 기본 환기 설명
+  static const String defaultVentilationDescription = '지금 창문을 열어도 좋습니다! 🪟';
+
+  /// 기본 PM10 값 (미세먼지)
+  static const double defaultPM10 = 45;
+
+  /// 기본 PM2.5 값 (초미세먼지)
+  static const double defaultPM25 = 22;
+
+  /// 기본 온도 (°C)
+  static const double defaultTemperature = 18;
+
+  /// 기본 습도 (%)
+  static const double defaultHumidity = 62;
+
+  // ============================================
+  // Temperature/Humidity Tab Defaults
+  // ============================================
+  /// 기본 최저 기온
+  static const int defaultMinTemp = 8;
+
+  /// 기본 최고 기온
+  static const int defaultMaxTemp = 22;
+
+  /// 기본 평균 습도
+  static const int defaultAvgHumidity = 72;
+
+  /// 기본 저녁 습도
+  static const int defaultEveningHumidity = 85;
+
+  /// 기본 현재 습도
+  static const int defaultCurrentHumidity = 62;
 }
