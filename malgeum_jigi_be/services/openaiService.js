@@ -101,3 +101,52 @@ export async function generateOutdoorGuide(temperature, humidity, rainfall, pm10
     };
   }
 }
+
+export async function generateApplianceGuide(weatherData) {
+  const prompt = `
+  당신은 기상 데이터를 기반으로 생활 가이드를 생성하는 스마트 도우미입니다.
+  다음은 오늘의 시간대별 온도와 습도 데이터입니다:
+  ${JSON.stringify(weatherData, null, 2)}
+
+  이 데이터를 참고하여 다음 세 가지 가전에 대한 사용 가이드를 작성하세요.
+  각 항목은 다음 구조를 따라야 합니다:
+  [
+    {
+      "name": "난방",
+      "status": "필요" 또는 "불필요",
+      "time": "사용 추천 시간대 (예: 오전 6시 ~ 9시)" 또는 null,
+      "reason": "추천 또는 불필요 사유",
+      "setting": "권장 설정 (예: 실내 온도 20~22°C 유지)" 또는 null
+    },
+    {
+      "name": "에어컨",
+      ...
+    },
+    {
+      "name": "제습기",
+      ...
+    }
+  ]
+
+  주의사항:
+  - 반드시 JSON 배열만 출력하세요. (예: [ { ... }, { ... }, { ... } ])
+  - 코드블럭이나 설명 텍스트를 포함하지 마세요.
+  `;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  try {
+    const jsonText = completion.choices[0].message.content.trim();
+    console.log("Appliance Guide JSON:", jsonText);
+    return JSON.parse(jsonText);
+  } catch (err) {
+    console.error("⚠️ OpenAI 응답 파싱 오류:", err);
+    return {
+      advisability: "주의",
+      summary: "가전제품 가이드를 생성하는 중 오류가 발생했습니다.",
+    };
+  }
+}
