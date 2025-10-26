@@ -158,3 +158,86 @@ export async function getDailyWeather(lat, lon, address) {
   }
 }
 
+/**
+ * 위도(lat), 경도(lon)를 기상청 격자(x, y)로 변환
+ * @param {number} lat 위도
+ * @param {number} lon 경도
+ * @returns {Promise<{x: number, y: number}>}
+ */
+export async function getGridXY(lat, lon) {
+  const url = `https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-dfs_xy_lonlat?lon=${lon}&lat=${lat}&help=0&authKey=${KMA_KEY}`;
+
+  try {
+    const response = await axios.get(url);
+    const data = response.data;
+
+    // 응답은 문자열 형태이므로 파싱 필요
+    // 예시:
+    // "#START7777\n#       LON,         LAT,   X,   Y\n 127.500000,   36.500000,  69, 104\n"
+    const lines = data.trim().split("\n");
+    const lastLine = lines[lines.length - 1].trim();
+    const parts = lastLine.split(",").map((v) => v.trim());
+
+    const x = parseInt(parts[2]);
+    const y = parseInt(parts[3]);
+
+    return { x, y };
+  } catch (error) {
+    console.error("격자 변환 요청 실패:", error.message);
+    throw new Error("기상청 격자 변환 API 호출 실패");
+  }
+}
+
+/**
+ * 기상청 단기예보 API 호출 - 오늘 날짜의 시간별 TMP(기온), REH(습도) 데이터 반환
+ * @param {number} x 격자 X 좌표
+ * @param {number} y 격자 Y 좌표
+ * @returns {Promise<Array<{category: string, fcstDate: string, fcstTime: string, fcstValue: string}>>}
+ */
+export async function getTodayWeather(x, y) {
+
+  // 오늘 날짜 (YYYYMMDD)
+  const now = new Date();
+  const baseDate = now.toISOString().slice(0, 10).replace(/-/g, ""); // ex: 20251026
+
+  // 요청 URL 구성
+  const url = `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst`;
+  const params = {
+    pageNo: 1,
+    numOfRows: 1000,
+    dataType: "JSON",
+    base_date: baseDate,
+    base_time: "0500", 
+    nx: x,
+    ny: y,
+    authKey: KMA_KEY,
+  };
+
+  try {
+    const response = await axios.get(url, { params });
+    const items = response.data?.response?.body?.items?.item;
+
+    if (!items) {
+      throw new Error("응답 데이터에 item이 없습니다.");
+    }
+
+    // 오늘 날짜 + TMP, REH 필터링
+    const filtered = items
+      .filter(
+        (it) =>
+          it.fcstDate === baseDate &&
+          (it.category === "TMP" || it.category === "REH")
+      )
+      .map(({ category, fcstDate, fcstTime, fcstValue }) => ({
+        category,
+        fcstDate,
+        fcstTime,
+        fcstValue,
+      }));
+
+    return filtered;
+  } catch (error) {
+    console.error("기상청 단기예보 API 호출 실패:", error.message);
+    throw new Error("기상청 단기예보 데이터 조회 실패");
+  }
+}
