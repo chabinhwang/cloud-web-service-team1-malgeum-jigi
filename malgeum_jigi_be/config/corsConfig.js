@@ -1,8 +1,8 @@
 import cors from "cors";
 
 const allowedOrigins = [
-  "http://localhost:50156"      // 개발용 프론트 주소
-  //"https://your-frontend-domain.com" // 배포용 프론트 주소
+  "http://localhost:50156",      // 개발용 프론트 주소
+  "http://malgeum-jigi-web-bucket.s3-website-us-east-1.amazonaws.com" // 배포용 프론트 주소
 ];
 
 const corsOptions = {
