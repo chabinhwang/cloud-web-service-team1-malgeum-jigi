@@ -454,4 +454,46 @@ class AppTheme {
     if (pm10Value <= 150) return cautionYellow; // 나쁨
     return badRed; // 매우나쁨
   }
+
+  // ========== Activity Status Border & Background Colors ==========
+
+  // Light Mode Activity Status Colors
+  static const Color activityRecommendedBorder = Color(0xFFBBF7D0); // green-200
+  static const Color activityOptimalBorder = Color(0xFF93C5FD);    // blue-300
+  static const Color activityCautionBorder = Color(0xFFFDE68A);    // yellow-200
+  static const Color activityProhibitedBorder = Color(0xFFFECACA); // red-200
+
+  // Light Mode Activity Status Text Colors
+  static const Color activityCautionText = Color(0xFFA16207); // yellow-700
+
+  // Dark Mode Activity Status Border Colors
+  static const Color darkActivityRecommendedBorder = Color(0xFF1B5E20); // dark-green-700
+  static const Color darkActivityOptimalBorder = Color(0xFF0D47A1);     // dark-blue-800
+  static const Color darkActivityCautionBorder = Color(0xFF4D3500);     // dark-yellow-800
+  static const Color darkActivityProhibitedBorder = Color(0xFF5B1D1D);  // dark-red-800
+
+  // Dark Mode Activity Status Text Colors
+  static const Color darkActivityCautionText = Color(0xFFFFD700); // gold
+
+  /// Get activity border color based on status and brightness
+  static Color getActivityBorderColor(String status, Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    switch (status) {
+      case 'recommended':
+        return isDark ? darkActivityRecommendedBorder : activityRecommendedBorder;
+      case 'optimal':
+        return isDark ? darkActivityOptimalBorder : activityOptimalBorder;
+      case 'caution':
+        return isDark ? darkActivityCautionBorder : activityCautionBorder;
+      case 'prohibited':
+        return isDark ? darkActivityProhibitedBorder : activityProhibitedBorder;
+      default:
+        return isDark ? darkActivityOptimalBorder : activityOptimalBorder;
+    }
+  }
+
+  /// Get activity text color for caution status
+  static Color getActivityCautionTextColor(Brightness brightness) {
+    return brightness == Brightness.dark ? darkActivityCautionText : activityCautionText;
+  }
 }
