@@ -62,37 +62,33 @@ class AirQualityData {
 }
 
 class TodayEnvironmentData {
-  final int minTemp;
-  final int maxTemp;
+  final String date;
+  final double minTemp;
+  final double maxTemp;
   final int avgHumidity;
-  final int eveningHumidity;
-  final int currentHumidity;
 
   const TodayEnvironmentData({
+    required this.date,
     required this.minTemp,
     required this.maxTemp,
     required this.avgHumidity,
-    required this.eveningHumidity,
-    required this.currentHumidity,
   });
 
   factory TodayEnvironmentData.fromJson(Map<String, dynamic> json) {
     return TodayEnvironmentData(
-      minTemp: json['minTemp'] as int,
-      maxTemp: json['maxTemp'] as int,
-      avgHumidity: json['avgHumidity'] as int,
-      eveningHumidity: json['eveningHumidity'] as int,
-      currentHumidity: json['currentHumidity'] as int,
+      date: json['date'] as String,
+      minTemp: (json['min_temperature'] as num).toDouble(),
+      maxTemp: (json['max_temperature'] as num).toDouble(),
+      avgHumidity: (json['avg_humidity'] as num).toInt(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'minTemp': minTemp,
-      'maxTemp': maxTemp,
-      'avgHumidity': avgHumidity,
-      'eveningHumidity': eveningHumidity,
-      'currentHumidity': currentHumidity,
+      'date': date,
+      'min_temperature': minTemp,
+      'max_temperature': maxTemp,
+      'avg_humidity': avgHumidity,
     };
   }
 }

@@ -190,17 +190,11 @@ class AppConstants {
   // Temperature/Humidity Tab Defaults
   // ============================================
   /// 기본 최저 기온
-  static const int defaultMinTemp = 8;
+  static const double defaultMinTemp = 8.0;
 
   /// 기본 최고 기온
-  static const int defaultMaxTemp = 22;
+  static const double defaultMaxTemp = 22.0;
 
   /// 기본 평균 습도
   static const int defaultAvgHumidity = 72;
-
-  /// 기본 저녁 습도
-  static const int defaultEveningHumidity = 85;
-
-  /// 기본 현재 습도
-  static const int defaultCurrentHumidity = 62;
 }

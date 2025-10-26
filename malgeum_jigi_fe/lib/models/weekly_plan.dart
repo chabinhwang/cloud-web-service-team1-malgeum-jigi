@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-enum ActivityType { laundry, exercise, ventilation, indoor, warning }
+enum ActivityType {
+  laundry,
+  exercise,
+  ventilation,
+  indoor,
+  warning,
+  dishwasher,
+  air_purifier,
+  refrigerator,
+  dryer,
+  air_conditioner,
+  vacuum,
+  outdoor,
+  hygiene,
+}
 
 enum ActivityStatus { recommended, caution, prohibited, optimal }
 
