@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/text_styles.dart';
 import '../../utils/responsive_util.dart';
 import '../radial_gauge.dart';
+import '../common/app_card.dart';
 
 /// 외출 가이드를 표시하는 카드 위젯
 class OutdoorGuideCard extends StatelessWidget {
   final Map<String, dynamic>? outdoorGuideData;
   final double pmValue;
   final bool isExpanded;
+
+  // 외출 가능성 매핑 (색상, 제목, 이모지)
+  static const Map<String, (Color, String, String)> _advisabilityMap = {
+    '추천': (AppTheme.lightGreen, '🚶 지금 외출 추천합니다', '✅'),
+    '좋음': (AppTheme.lightGreen, '🚶 지금 외출 추천합니다', '✅'),
+    '보통': (AppTheme.lightYellow, '⚠️ 외출 시 주의가 필요합니다', '⚠️'),
+    '나쁨': (AppTheme.lightRed, '❌ 외출을 삼가시기 바랍니다', '❌'),
+    '주의': (AppTheme.lightRed, '❌ 외출을 삼가시기 바랍니다', '❌'),
+  };
 
   const OutdoorGuideCard({
     required this.outdoorGuideData,
@@ -16,125 +27,47 @@ class OutdoorGuideCard extends StatelessWidget {
     super.key,
   });
 
+  /// 외출 가능성 정보를 반환합니다 (색상, 제목, 기본 이모지).
+  (Color, String, String) _getAdvisabilityInfo() {
+    final advisability = outdoorGuideData?['advisability'] as String? ?? '';
+    return _advisabilityMap[advisability] ??
+        (AppTheme.lightGreen, '🚶 지금 외출 괜찮아요', '✅');
+  }
+
   /// 외출 가능성에 따른 색상을 반환합니다.
   Color _getOutdoorGuideColor() {
-    final advisability = outdoorGuideData?['advisability'] as String? ?? '';
-
-    switch (advisability) {
-      case '추천':
-      case '좋음':
-        return AppTheme.lightGreen;
-      case '보통':
-        return AppTheme.lightYellow;
-      case '나쁨':
-      case '주의':
-        return AppTheme.lightRed;
-      default:
-        return AppTheme.lightGreen;
-    }
+    return _getAdvisabilityInfo().$1;
   }
 
   /// 외출 가이드 제목을 반환합니다.
   String _getOutdoorGuideTitle() {
-    final advisability = outdoorGuideData?['advisability'] as String? ?? '';
-
-    switch (advisability) {
-      case '추천':
-      case '좋음':
-        return '🚶 지금 외출 추천합니다';
-      case '보통':
-        return '⚠️ 외출 시 주의가 필요합니다';
-      case '나쁨':
-      case '주의':
-        return '❌ 외출을 삼가시기 바랍니다';
-      default:
-        return '🚶 지금 외출 괜찮아요';
-    }
+    return _getAdvisabilityInfo().$2;
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedCrossFade(
       firstChild: const SizedBox.shrink(),
-      secondChild: Card(
-        margin: const EdgeInsets.only(top: 16),
-        elevation: 2,
-        shadowColor: const Color(0x140D0A2C),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Text(
-                '외출 가이드',
-                style: TextStyle(
-                  fontSize: 18 * ResponsiveUtil.getTextScaleFactor(context),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // PM10 Gauge는 기존 RadialGauge 위젯 사용
-              RadialGauge(
-                value: pmValue,
-                maxValue: 250,
-                size: 200,
-                strokeWidth: 20,
-                label: 'PM10 농도',
-              ),
-              const SizedBox(height: 24),
-              // Guide container
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: _getOutdoorGuideColor().withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Colors.transparent,
-                    width: 0,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      _getOutdoorGuideTitle(),
-                      style: TextStyle(
-                        fontSize: 18 *
-                            ResponsiveUtil.getTextScaleFactor(context),
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      outdoorGuideData?['summary'] as String? ??
-                          '오후 시간대는 미세먼지가 "보통" 수준이지만, 저녁 5시 이후로 조금씩 나빠질 예정이에요.',
-                      style: TextStyle(
-                        fontSize: 14 *
-                            ResponsiveUtil.getTextScaleFactor(context),
-                        color: AppTheme.getRecommendationTextColor(
-                          Theme.of(context).brightness,
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '권장사항',
-                style: TextStyle(
-                  fontSize: 16 *
-                      ResponsiveUtil.getTextScaleFactor(context),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ..._buildRecommendationsFromAPI(),
-            ],
-          ),
+      secondChild: AppCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text('외출 가이드', style: AppTextStyles.heading(context)),
+            const SizedBox(height: 24),
+            RadialGauge(
+              value: pmValue,
+              maxValue: 250,
+              size: 200,
+              strokeWidth: 20,
+              label: 'PM10 농도',
+            ),
+            const SizedBox(height: 24),
+            _buildGuideContainer(context),
+            const SizedBox(height: 16),
+            Text('권장사항', style: AppTextStyles.headingSmall(context)),
+            const SizedBox(height: 12),
+            ..._buildRecommendationsFromAPI(context),
+          ],
         ),
       ),
       crossFadeState: isExpanded
@@ -144,59 +77,72 @@ class OutdoorGuideCard extends StatelessWidget {
     );
   }
 
+  Widget _buildGuideContainer(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _getOutdoorGuideColor().withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Text(
+            _getOutdoorGuideTitle(),
+            style: AppTextStyles.heading(context),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            outdoorGuideData?['summary'] as String? ??
+                '오후 시간대는 미세먼지가 "보통" 수준이지만, 저녁 5시 이후로 조금씩 나빠질 예정이에요.',
+            style: AppTextStyles.recommendation(context),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 권장사항 아이템 매핑 (이모지, 텍스트)
+  static const List<(String, Color)> _recommendationEmojisAndColors = [
+    ('✅', AppTheme.lightGreen),
+    ('⚠️', AppTheme.lightYellow),
+    ('💧', AppTheme.lightBlue),
+  ];
+
   /// API에서 받은 권장사항을 표시합니다.
-  List<Widget> _buildRecommendationsFromAPI() {
+  List<Widget> _buildRecommendationsFromAPI(BuildContext context) {
     final recommendations =
         outdoorGuideData?['recommendations'] as List<dynamic>? ?? [];
 
-    if (recommendations.isEmpty) {
-      // 기본값: API에서 recommendations이 없을 때
-      return [
-        _buildRecommendationItem(
-          '✅',
-          '일반 외출 가능',
-          AppTheme.lightGreen,
-        ),
-        const SizedBox(height: 8),
-        _buildRecommendationItem(
-          '⚠️',
-          '필요 시 마스크 착용',
-          AppTheme.lightYellow,
-        ),
-        const SizedBox(height: 8),
-        _buildRecommendationItem(
-          '💧',
-          '충분한 수분 섭취',
-          AppTheme.lightBlue,
-        ),
-      ];
-    }
+    final defaultRecommendations = [
+      ('✅', '일반 외출 가능', AppTheme.lightGreen),
+      ('⚠️', '필요 시 마스크 착용', AppTheme.lightYellow),
+      ('💧', '충분한 수분 섭취', AppTheme.lightBlue),
+    ];
 
-    // API에서 받은 recommendations 렌더링
-    final List<Widget> widgets = [];
-    for (int i = 0; i < recommendations.length; i++) {
-      final recommendation = recommendations[i] as String;
-      final colors = [
-        AppTheme.lightGreen,
-        AppTheme.lightYellow,
-        AppTheme.lightBlue
-      ];
-      final emoji = ['✅', '⚠️', '💧'];
+    final itemsToShow = recommendations.isEmpty
+        ? defaultRecommendations
+        : recommendations
+            .asMap()
+            .entries
+            .map((e) {
+              final (emoji, color) =
+                  _recommendationEmojisAndColors[e.key % _recommendationEmojisAndColors.length];
+              return (emoji, e.value as String, color);
+            })
+            .toList();
 
-      widgets.add(
+    return [
+      for (int i = 0; i < itemsToShow.length; i++) ...[
         _buildRecommendationItem(
-          emoji[i % emoji.length],
-          recommendation,
-          colors[i % colors.length],
+          itemsToShow[i].$1,
+          itemsToShow[i].$2,
+          itemsToShow[i].$3,
+          context,
         ),
-      );
-
-      if (i < recommendations.length - 1) {
-        widgets.add(const SizedBox(height: 8));
-      }
-    }
-
-    return widgets;
+        if (i < itemsToShow.length - 1) const SizedBox(height: 8),
+      ]
+    ];
   }
 
   /// 권장사항 항목을 빌드합니다.
@@ -204,45 +150,31 @@ class OutdoorGuideCard extends StatelessWidget {
     String emoji,
     String text,
     Color backgroundColor,
+    BuildContext context,
   ) {
-    return Builder(
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: backgroundColor.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.transparent,
-              width: 0,
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: backgroundColor.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Text(
+            emoji,
+            style: TextStyle(
+              fontSize: 20 * ResponsiveUtil.getTextScaleFactor(context),
             ),
           ),
-          child: Row(
-            children: [
-              Text(
-                emoji,
-                style: TextStyle(
-                  fontSize:
-                      20 * ResponsiveUtil.getTextScaleFactor(context),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontSize:
-                        14 * ResponsiveUtil.getTextScaleFactor(context),
-                    color: AppTheme.getRecommendationTextColor(
-                      Theme.of(context).brightness,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTextStyles.recommendation(context),
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

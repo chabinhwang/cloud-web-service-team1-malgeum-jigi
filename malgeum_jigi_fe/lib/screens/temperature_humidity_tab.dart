@@ -21,9 +21,6 @@ class TemperatureHumidityTab extends StatefulWidget {
 }
 
 class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
-  bool _isLoading = false;
-  String? _error;
-
   TodayEnvironmentData? _todayData;
   List<ApplianceGuide> _appliances = [];
 
@@ -37,11 +34,6 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
     try {
       final locationProvider = context.read<LocationProvider>();
 
@@ -71,15 +63,11 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
 
           // 가전 가이드 데이터 파싱
           _appliances = ApiParser.parseAppliances(applianceResponse);
-
-          _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'API 데이터를 불러올 수 없습니다: ${e.toString()}';
-          _isLoading = false;
           // 기본값 설정
           _todayData = ApiParser.parseTodayEnvironment(null);
           _appliances = ApiParser.parseAppliances(null);

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/responsive_util.dart';
+import '../../theme/text_styles.dart';
 import '../../utils/appliance_config.dart';
 import '../../models/air_quality_data.dart';
+import '../common/app_card.dart';
 
 /// 가전제품 가이드 카드 위젯
 class ApplianceCard extends StatelessWidget {
@@ -15,185 +16,117 @@ class ApplianceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 가전제품 설정 가져오기
     final config = ApplianceConfig.get(appliance.name);
-
-    // 필요/불필요에 따라 색상 결정
     final backgroundColor = appliance.isRequired
         ? config.activeBackgroundColor
         : AppTheme.getUnnecessaryBackgroundColor(
             Theme.of(context).brightness,
           );
-    final textColor = appliance.isRequired
-        ? config.activeTextColor
-        : AppTheme.getRecommendationTextColor(
-            Theme.of(context).brightness,
-          );
 
-    return Card(
-      elevation: 2,
-      shadowColor: const Color(0x140D0A2C),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Colors.transparent, width: 0),
-      ),
-      color: backgroundColor.withValues(alpha: 0.5),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(config.icon, size: 32, color: config.activeTextColor),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        appliance.name,
-                        style: TextStyle(
-                          fontSize: 18 *
-                              ResponsiveUtil.getTextScaleFactor(context),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: appliance.isRequired
-                              ? AppTheme.lightBlue
-                              : AppTheme
-                                  .getUnnecessaryBadgeBackgroundColor(
-                                Theme.of(context).brightness,
-                              ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          appliance.status,
-                          style: TextStyle(
-                            fontSize: 12 *
-                                ResponsiveUtil.getTextScaleFactor(context),
-                            fontWeight: FontWeight.w600,
-                            color: appliance.isRequired
-                                ? AppTheme.primaryBlue
-                                : AppTheme.getRecommendationTextColor(
-                                    Theme.of(context).brightness,
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (appliance.time != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          '사용 시간: ',
-                          style: TextStyle(
-                            fontSize: 12 *
-                                ResponsiveUtil.getTextScaleFactor(context),
-                            color: AppTheme.getRecommendationTextColor(
-                              Theme.of(context).brightness,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          appliance.time!,
-                          style: TextStyle(
-                            fontSize: 12 *
-                                ResponsiveUtil.getTextScaleFactor(context),
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.getRecommendationTextColor(
-                              Theme.of(context).brightness,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+    return AppCard(
+      backgroundColor: backgroundColor.withValues(alpha: 0.5),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(config.icon, size: 32, color: config.activeTextColor),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(appliance.name, style: AppTextStyles.heading(context)),
+                    const SizedBox(width: 8),
+                    _buildStatusBadge(context),
                   ],
+                ),
+                if (appliance.time != null) ...[
                   const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '이유: ',
-                        style: TextStyle(
-                          fontSize: 12 *
-                              ResponsiveUtil.getTextScaleFactor(context),
-                          color: AppTheme.getRecommendationTextColor(
-                            Theme.of(context).brightness,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          '"${appliance.reason}"',
-                          style: TextStyle(
-                            fontSize: 12 *
-                                ResponsiveUtil.getTextScaleFactor(context),
-                            color: AppTheme.getRecommendationTextColor(
-                              Theme.of(context).brightness,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (appliance.setting != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.transparent,
-                          width: 0,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            '권장 설정: ',
-                            style: TextStyle(
-                              fontSize: 12 *
-                                  ResponsiveUtil.getTextScaleFactor(
-                                    context,
-                                  ),
-                              color: AppTheme.getLocationTimeTextColor(
-                                Theme.of(context).brightness,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            appliance.setting!,
-                            style: TextStyle(
-                              fontSize: 12 *
-                                  ResponsiveUtil.getTextScaleFactor(
-                                    context,
-                                  ),
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.getLocationTimeTextColor(
-                                Theme.of(context).brightness,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  _buildTimeRow(context),
                 ],
+                const SizedBox(height: 8),
+                _buildReasonRow(context),
+                if (appliance.setting != null) ...[
+                  const SizedBox(height: 12),
+                  _buildSettingBox(context),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final badgeColor = appliance.isRequired
+        ? AppTheme.primaryBlue
+        : AppTheme.getRecommendationTextColor(brightness);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: appliance.isRequired
+            ? AppTheme.lightBlue
+            : AppTheme.getUnnecessaryBadgeBackgroundColor(brightness),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        appliance.status,
+        style: AppTextStyles.badge(context).copyWith(color: badgeColor),
+      ),
+    );
+  }
+
+  Widget _buildTimeRow(BuildContext context) {
+    return Row(
+      children: [
+        Text('사용 시간: ', style: AppTextStyles.recommendationLabel(context)),
+        Text(
+          appliance.time!,
+          style: AppTextStyles.recommendationLabelBold(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReasonRow(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('이유: ', style: AppTextStyles.recommendationLabel(context)),
+        Expanded(
+          child: Text(
+            '"${appliance.reason}"',
+            style: AppTextStyles.recommendation(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingBox(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Text('권장 설정: ', style: AppTextStyles.locationTimeLabel(context)),
+          Text(
+            appliance.setting!,
+            style: AppTextStyles.recommendationLabelBold(context).copyWith(
+              color: AppTheme.getLocationTimeTextColor(
+                Theme.of(context).brightness,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
