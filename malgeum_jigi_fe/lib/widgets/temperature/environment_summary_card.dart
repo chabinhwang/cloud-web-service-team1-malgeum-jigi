@@ -7,10 +7,7 @@ import '../../models/air_quality_data.dart';
 class EnvironmentSummaryCard extends StatelessWidget {
   final TodayEnvironmentData todayData;
 
-  const EnvironmentSummaryCard({
-    required this.todayData,
-    super.key,
-  });
+  const EnvironmentSummaryCard({required this.todayData, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +16,7 @@ class EnvironmentSummaryCard extends StatelessWidget {
       shadowColor: const Color(0x140D0A2C),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(
-          color: Colors.transparent,
-          width: 0,
-        ),
+        side: const BorderSide(color: Colors.transparent, width: 0),
       ),
       color: AppTheme.lightBlue.withValues(alpha: 0.5),
       child: Container(
@@ -32,8 +26,7 @@ class EnvironmentSummaryCard extends StatelessWidget {
             Text(
               '오늘의 환경 요약',
               style: TextStyle(
-                fontSize:
-                    18 * ResponsiveUtil.getTextScaleFactor(context),
+                fontSize: 18 * ResponsiveUtil.getTextScaleFactor(context),
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textPrimary,
               ),
@@ -45,9 +38,7 @@ class EnvironmentSummaryCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(
-                        alpha: 0.7,
-                      ),
+                      color: Colors.white.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -60,33 +51,32 @@ class EnvironmentSummaryCard extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 '기온',
                                 style: TextStyle(
-                                  fontSize: 12 *
+                                  fontSize:
+                                      12 *
                                       ResponsiveUtil.getTextScaleFactor(
                                         context,
                                       ),
-                                  color: AppTheme
-                                      .getLocationTimeTextColor(
+                                  color: AppTheme.getLocationTimeTextColor(
                                     Theme.of(context).brightness,
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${todayData.minTemp}°C ~ ${todayData.maxTemp}°C',
+                                '${todayData.minTemp.toStringAsFixed(1)}°C ~ ${todayData.maxTemp.toStringAsFixed(1)}°C',
                                 style: TextStyle(
-                                  fontSize: 16 *
+                                  fontSize:
+                                      16 *
                                       ResponsiveUtil.getTextScaleFactor(
                                         context,
                                       ),
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme
-                                      .getLocationTimeTextColor(
+                                  color: AppTheme.getLocationTimeTextColor(
                                     Theme.of(context).brightness,
                                   ),
                                 ),
@@ -103,9 +93,7 @@ class EnvironmentSummaryCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(
-                        alpha: 0.7,
-                      ),
+                      color: Colors.white.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -118,18 +106,17 @@ class EnvironmentSummaryCard extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 '습도',
                                 style: TextStyle(
-                                  fontSize: 12 *
+                                  fontSize:
+                                      12 *
                                       ResponsiveUtil.getTextScaleFactor(
                                         context,
                                       ),
-                                  color: AppTheme
-                                      .getLocationTimeTextColor(
+                                  color: AppTheme.getLocationTimeTextColor(
                                     Theme.of(context).brightness,
                                   ),
                                 ),
@@ -138,30 +125,18 @@ class EnvironmentSummaryCard extends StatelessWidget {
                               Text(
                                 '평균 ${todayData.avgHumidity}%',
                                 style: TextStyle(
-                                  fontSize: 16 *
+                                  fontSize:
+                                      16 *
                                       ResponsiveUtil.getTextScaleFactor(
                                         context,
                                       ),
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme
-                                      .getLocationTimeTextColor(
+                                  color: AppTheme.getLocationTimeTextColor(
                                     Theme.of(context).brightness,
                                   ),
                                 ),
                               ),
-                              Text(
-                                '(저녁 ${todayData.eveningHumidity}%까지 상승)',
-                                style: TextStyle(
-                                  fontSize: 10 *
-                                      ResponsiveUtil.getTextScaleFactor(
-                                        context,
-                                      ),
-                                  color: AppTheme
-                                      .getLocationTimeTextColor(
-                                    Theme.of(context).brightness,
-                                  ),
-                                ),
-                              ),
+                              // API에서 evening_humidity를 제공하지 않으므로 표시하지 않음
                             ],
                           ),
                         ),

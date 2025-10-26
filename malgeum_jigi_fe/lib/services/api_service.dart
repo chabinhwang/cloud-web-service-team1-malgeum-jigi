@@ -31,7 +31,7 @@ class ApiService {
         final uri = Uri.parse('$baseUrl/guides/ventilation')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
-          const Duration(seconds: 10),
+          const Duration(seconds: 30),
           onTimeout: () => throw TimeoutException('Request timeout'),
         );
 
@@ -57,7 +57,7 @@ class ApiService {
         final uri = Uri.parse('$baseUrl/weather/current')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
-          const Duration(seconds: 10),
+          const Duration(seconds: 30),
           onTimeout: () => throw TimeoutException('Request timeout'),
         );
 
@@ -81,7 +81,7 @@ class ApiService {
         final uri = Uri.parse('$baseUrl/guides/outdoor')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
-          const Duration(seconds: 10),
+          const Duration(seconds: 30),
           onTimeout: () => throw TimeoutException('Request timeout'),
         );
 
@@ -105,7 +105,7 @@ class ApiService {
         final uri = Uri.parse('$baseUrl/weather/today')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
-          const Duration(seconds: 10),
+          const Duration(seconds: 30),
           onTimeout: () => throw TimeoutException('Request timeout'),
         );
 
@@ -129,7 +129,7 @@ class ApiService {
         final uri = Uri.parse('$baseUrl/guides/appliances')
             .replace(queryParameters: queryParams);
         final response = await http.get(uri).timeout(
-          const Duration(seconds: 10),
+          const Duration(seconds: 30),
           onTimeout: () => throw TimeoutException('Request timeout'),
         );
 
@@ -154,9 +154,10 @@ class ApiService {
 
         final uri = Uri.parse('$baseUrl/guides/weekly')
             .replace(queryParameters: queryParams);
+
         final response = await http.get(uri).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => throw TimeoutException('Request timeout'),
+          const Duration(seconds: 30),  // API 응답이 오래 걸리므로 30초로 증가
+          onTimeout: () => throw TimeoutException('Request timeout after 30 seconds'),
         );
 
         return _handleResponse(response);

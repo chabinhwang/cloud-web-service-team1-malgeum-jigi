@@ -64,27 +64,24 @@ class ApiParser {
     }
 
     return TodayEnvironmentData(
-      minTemp: parseInt(json['min_temperature'], AppConstants.defaultMinTemp),
-      maxTemp: parseInt(json['max_temperature'], AppConstants.defaultMaxTemp),
+      date: parseString(json['date'], ''),
+      minTemp: parseDouble(
+        json['min_temperature'],
+        AppConstants.defaultMinTemp,
+      ),
+      maxTemp: parseDouble(
+        json['max_temperature'],
+        AppConstants.defaultMaxTemp,
+      ),
       avgHumidity: parseInt(
-        json['avg_humidity'],
+        json['humidity'] ?? json['avg_humidity'],
         AppConstants.defaultAvgHumidity,
-      ),
-      eveningHumidity: parseInt(
-        json['evening_humidity'],
-        AppConstants.defaultEveningHumidity,
-      ),
-      currentHumidity: parseInt(
-        json['current_humidity'],
-        AppConstants.defaultCurrentHumidity,
       ),
     );
   }
 
   /// ApplianceGuide 리스트를 API 응답에서 파싱합니다.
-  static List<ApplianceGuide> parseAppliances(
-    Map<String, dynamic>? json,
-  ) {
+  static List<ApplianceGuide> parseAppliances(Map<String, dynamic>? json) {
     if (json == null) {
       return _getDefaultAppliances();
     }
@@ -122,12 +119,16 @@ class ApiParser {
 
   /// 기본 TodayEnvironmentData를 반환합니다.
   static TodayEnvironmentData _getDefaultTodayEnvironmentData() {
-    return const TodayEnvironmentData(
-      minTemp: AppConstants.defaultMinTemp,
-      maxTemp: AppConstants.defaultMaxTemp,
+    // 오늘 날짜 생성 (YYYY-MM-DD 형식)
+    final today = DateTime.now();
+    final todayString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    return TodayEnvironmentData(
+      date: todayString,
+      minTemp: AppConstants.defaultMinTemp.toDouble(),
+      maxTemp: AppConstants.defaultMaxTemp.toDouble(),
       avgHumidity: AppConstants.defaultAvgHumidity,
-      eveningHumidity: AppConstants.defaultEveningHumidity,
-      currentHumidity: AppConstants.defaultCurrentHumidity,
     );
   }
 
@@ -164,174 +165,165 @@ class ApiParser {
       return _getDefaultWeeklyPlan();
     }
 
-    final weekPlansList = json['week_plans'] as List<dynamic>? ?? [];
+    // week_plans 또는 weekPlans 필드 찾기 (필드명 유연화)
+    final weekPlansList = (json['week_plans'] ?? json['weekPlans']) as List<dynamic>? ?? [];
+
     if (weekPlansList.isEmpty) {
       return _getDefaultWeeklyPlan();
     }
 
-    return weekPlansList
-        .map((e) {
-          if (e is! Map<String, dynamic>) return null;
-          return DayPlan(
-            date: parseString(e['date'], ''),
-            dayOfWeek: parseString(e['day_of_week'], ''),
-            isToday: parseBool(e['is_today'], false),
-            activities: (e['activities'] as List<dynamic>? ?? [])
-                .map((activity) {
-                  if (activity is! Map<String, dynamic>) return null;
-                  return Activity(
-                    type: ActivityType.values.firstWhere(
-                      (et) => et.name == activity['type'],
-                      orElse: () => ActivityType.indoor,
-                    ),
-                    emoji: parseString(activity['emoji'], ''),
-                    title: parseString(activity['title'], ''),
-                    status: ActivityStatus.values.firstWhere(
-                      (es) => es.name == activity['status'],
-                      orElse: () => ActivityStatus.recommended,
-                    ),
-                    time: activity['time'] as String?,
-                    reason: parseString(activity['reason'], ''),
-                  );
-                })
-                .whereType<Activity>()
-                .toList(),
-          );
-        })
-        .whereType<DayPlan>()
-        .toList();
+    // 오늘 날짜 계산 (YYYY-MM-DD 형식)
+    final today = DateTime.now();
+    final todayString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    try {
+      final result = weekPlansList
+          .map((e) {
+            try {
+              if (e is! Map<String, dynamic>) {
+                return null;
+              }
+
+              // API 날짜 형식: "2024-10-23" -> UI 날짜 형식: "10/23"
+              final apiDate = parseString(e['date'], '');
+              final formattedDate = _formatDateToUI(apiDate);
+
+              // is_today 자동 계산
+              final isToday = apiDate == todayString;
+
+              final activitiesList = (e['activities'] as List<dynamic>? ?? []);
+
+              return DayPlan(
+                date: formattedDate,
+                dayOfWeek: parseString(e['day_of_week'], ''),
+                isToday: isToday,
+                activities: activitiesList
+                    .map((activity) {
+                      if (activity is! Map<String, dynamic>) {
+                        return null;
+                      }
+
+                      final activityType = ActivityType.values.firstWhere(
+                        (et) => et.name == activity['type'],
+                        orElse: () => ActivityType.indoor,
+                      );
+
+                      // API에 emoji 없으면 타입별 기본 emoji 사용
+                      final emoji =
+                          activity['emoji'] as String? ??
+                          _getDefaultEmojiForType(activityType);
+
+                      return Activity(
+                        type: activityType,
+                        emoji: emoji,
+                        title: parseString(activity['title'], ''),
+                        status: ActivityStatus.values.firstWhere(
+                          (es) => es.name == activity['status'],
+                          orElse: () => ActivityStatus.recommended,
+                        ),
+                        time: activity['time'] as String?,
+                        reason: parseString(activity['reason'], ''),
+                      );
+                    })
+                    .whereType<Activity>()
+                    .toList(),
+              );
+            } catch (e) {
+              return null;
+            }
+          })
+          .whereType<DayPlan>()
+          .toList();
+
+      return result;
+    } catch (e) {
+      return _getDefaultWeeklyPlan();
+    }
+  }
+
+  /// 날짜 형식 변환: "2024-10-23" -> "10/23"
+  static String _formatDateToUI(String apiDate) {
+    if (apiDate.isEmpty) return '';
+
+    try {
+      final parts = apiDate.split('-');
+      if (parts.length == 3) {
+        final month = int.parse(parts[1]);
+        final day = int.parse(parts[2]);
+        return '$month/$day';
+      }
+    } catch (e) {
+      // 파싱 실패시 원본 반환
+    }
+
+    return apiDate;
+  }
+
+  /// ActivityType별 기본 emoji 반환
+  static String _getDefaultEmojiForType(ActivityType type) {
+    switch (type) {
+      case ActivityType.laundry:
+        return '🧺';
+      case ActivityType.exercise:
+        return '🏃';
+      case ActivityType.ventilation:
+        return '🧹';
+      case ActivityType.indoor:
+        return '📺';
+      case ActivityType.warning:
+        return '⚠️';
+      case ActivityType.dishwasher:
+        return '🍽️';
+      case ActivityType.air_purifier:
+        return '💨';
+      case ActivityType.refrigerator:
+        return '🧊';
+      case ActivityType.dryer:
+        return '👕';
+      case ActivityType.air_conditioner:
+        return '❄️';
+      case ActivityType.vacuum:
+        return '🧹';
+      case ActivityType.outdoor:
+        return '🌤️';
+      case ActivityType.hygiene:
+        return '🧼';
+    }
   }
 
   /// 기본 WeeklyPlan 리스트를 반환합니다.
   static List<DayPlan> _getDefaultWeeklyPlan() {
-    return [
-      const DayPlan(
-        date: '10/17',
-        dayOfWeek: '금요일',
-        activities: [
-          Activity(
-            type: ActivityType.exercise,
-            emoji: '🏃',
-            title: '야외운동',
-            status: ActivityStatus.recommended,
-            time: '오전 7~9시',
-            reason: '미세먼지 "좋음", 기온 15°C로 쾌적해요!',
-          ),
-          Activity(
-            type: ActivityType.ventilation,
-            emoji: '🧹',
-            title: '환기 청소',
-            status: ActivityStatus.recommended,
-            time: '오전 9~11시',
-            reason: '공기질이 좋고 바람도 적당해 먼지가 잘 배출돼요.',
-          ),
-        ],
-      ),
-      const DayPlan(
-        date: '10/18',
-        dayOfWeek: '토요일',
-        activities: [
-          Activity(
-            type: ActivityType.laundry,
-            emoji: '🧺',
-            title: '세탁',
-            status: ActivityStatus.recommended,
-            time: '오전 10시~오후 3시',
-            reason: '맑고 건조해서 빨래가 빨리 마릅니다. 일조량 충분!',
-          ),
-          Activity(
-            type: ActivityType.exercise,
-            emoji: '🏃',
-            title: '야외운동',
-            status: ActivityStatus.caution,
-            reason: '새벽 영하 기온이라 이른 아침은 피하세요.',
-          ),
-        ],
-      ),
-      const DayPlan(
-        date: '10/19',
-        dayOfWeek: '일요일',
-        activities: [
-          Activity(
-            type: ActivityType.laundry,
-            emoji: '🌧️',
-            title: '빨래 금지',
-            status: ActivityStatus.prohibited,
-            reason: '오후부터 비 예보(강수확률 80%). 빨래는 내일로!',
-          ),
-          Activity(
-            type: ActivityType.indoor,
-            emoji: '📺',
-            title: '실내 활동 추천',
-            status: ActivityStatus.recommended,
-            reason: '하루 종일 비가 올 예정이에요.',
-          ),
-        ],
-      ),
-      const DayPlan(
-        date: '10/20',
-        dayOfWeek: '월요일',
-        activities: [
-          Activity(
-            type: ActivityType.laundry,
-            emoji: '🧺',
-            title: '세탁',
-            status: ActivityStatus.optimal,
-            time: '오전 10시 이후',
-            reason: '어제 내린 비로 공기가 깨끗해졌어요. 빨래하기 최고의 날!',
-          ),
-          Activity(
-            type: ActivityType.exercise,
-            emoji: '🏃',
-            title: '야외운동',
-            status: ActivityStatus.recommended,
-            time: '오후 4~6시',
-            reason: '비 개고 미세먼지 "매우좋음", 산책하기 완벽해요.',
-          ),
-        ],
-      ),
-      const DayPlan(
-        date: '10/21',
-        dayOfWeek: '화요일',
-        activities: [
-          Activity(
-            type: ActivityType.exercise,
-            emoji: '🏃',
-            title: '야외운동',
-            status: ActivityStatus.recommended,
-            time: '오전 6~8시, 저녁 7~9시',
-            reason: '미세먼지 낮고 기온 적당. 조깅 최적!',
-          ),
-        ],
-      ),
-      const DayPlan(
-        date: '10/22',
-        dayOfWeek: '수요일',
-        isToday: true,
-        activities: [
-          Activity(
-            type: ActivityType.warning,
-            emoji: '⚠️',
-            title: '미세먼지 나쁨',
-            status: ActivityStatus.caution,
-            reason: '야외활동 자제, 마스크 필수. 실내 환기도 최소화하세요',
-          ),
-        ],
-      ),
-      const DayPlan(
-        date: '10/23',
-        dayOfWeek: '목요일',
-        activities: [
-          Activity(
-            type: ActivityType.ventilation,
-            emoji: '🧹',
-            title: '환기 청소',
-            status: ActivityStatus.recommended,
-            time: '오전 10~12시',
-            reason: '미세먼지 다시 좋아져요. 이불 털고 환기하세요!',
-          ),
-        ],
-      ),
-    ];
+    // 오늘부터 4일간의 더미 데이터 생성
+    final today = DateTime.now();
+    final daysOfWeek = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+
+    final dummyPlans = <DayPlan>[];
+    for (int i = 0; i < 4; i++) {
+      final date = today.add(Duration(days: i));
+      final month = date.month;
+      final day = date.day;
+      final dayOfWeek = daysOfWeek[date.weekday % 7];
+      final isToday = i == 0;
+
+      dummyPlans.add(
+        DayPlan(
+          date: '$month/$day',
+          dayOfWeek: dayOfWeek,
+          isToday: isToday,
+          activities: const [
+            Activity(
+              type: ActivityType.indoor,
+              emoji: '📺',
+              title: '일정 로딩 중',
+              status: ActivityStatus.recommended,
+              reason: 'API에서 데이터를 받아오는 중입니다.',
+            ),
+          ],
+        ),
+      );
+    }
+
+    return dummyPlans;
   }
 }

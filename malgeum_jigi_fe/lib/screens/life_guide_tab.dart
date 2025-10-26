@@ -61,7 +61,6 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
         setState(() {
           // 주간 계획 데이터 파싱
           _weeklyPlan = ApiParser.parseWeeklyPlan(weeklyPlanResponse);
-
           _isLoading = false;
         });
       }
@@ -77,177 +76,199 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
     }
   }
 
-
   Future<void> _refreshData() async {
     await _loadData();
   }
 
   @override
   Widget build(BuildContext context) {
-    final weeklyPlan = _weeklyPlan.isEmpty ? ApiParser.parseWeeklyPlan(null) : _weeklyPlan;
+    final weeklyPlan = _weeklyPlan.isEmpty
+        ? ApiParser.parseWeeklyPlan(null)
+        : _weeklyPlan;
 
     return RefreshIndicator(
       onRefresh: _refreshData,
       child: CustomScrollView(
         controller: widget.scrollController,
         slivers: [
-        TabHeader(
-          title: '생활 맞춤 가이드',
-          backgroundImage:
-              'https://images.unsplash.com/photo-1549582100-d67ab35b3507',
-          subtitle: '일주일 생활 계획을 한눈에',
-          scrollController: widget.scrollController,
-        ),
-        SliverToBoxAdapter(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    // Header
-                    Text(
-                      '주간 생활 플랜',
-                      style: TextStyle(
-                        fontSize:
-                            24 * ResponsiveUtil.getTextScaleFactor(context),
-                        fontWeight: FontWeight.bold,
+          TabHeader(
+            title: '생활 맞춤 가이드',
+            backgroundImage:
+                'https://images.unsplash.com/photo-1549582100-d67ab35b3507',
+            subtitle: '일주일 생활 계획을 한눈에',
+            scrollController: widget.scrollController,
+          ),
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      // Header
+                      Text(
+                        '주간 생활 플랜',
+                        style: TextStyle(
+                          fontSize:
+                              24 * ResponsiveUtil.getTextScaleFactor(context),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppConstants.spacingSmall),
-                    Text(
-                      '10월 17일 ~ 10월 23일',
-                      style: TextStyle(
-                        fontSize:
-                            14 * ResponsiveUtil.getTextScaleFactor(context),
-                        color: AppTheme.getLocationTimeTextColor(Theme.of(context).brightness),
-                      ),
-                    ),
-                    const SizedBox(height: AppConstants.spacingXlarge),
-
-                    // Weekly Plan
-                    ...weeklyPlan.map((day) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '${day.dayOfWeek} ${day.date}',
-                                  style: TextStyle(
-                                    fontSize:
-                                        18 *
-                                        ResponsiveUtil.getTextScaleFactor(
-                                          context,
-                                        ),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (day.isToday) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.primaryBlue,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      '오늘',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
+                      const SizedBox(height: AppConstants.spacingSmall),
+                      Builder(
+                        builder: (context) {
+                          // 날짜 범위 동적으로 표시
+                          String dateRange = '로딩 중...';
+                          if (weeklyPlan.isNotEmpty) {
+                            final firstDate = weeklyPlan.first.date;
+                            final lastDate = weeklyPlan.last.date;
+                            dateRange = '$firstDate ~ $lastDate';
+                          }
+                          return Text(
+                            dateRange,
+                            style: TextStyle(
+                              fontSize:
+                                  14 *
+                                  ResponsiveUtil.getTextScaleFactor(context),
+                              color: AppTheme.getLocationTimeTextColor(
+                                Theme.of(context).brightness,
+                              ),
                             ),
-                            const SizedBox(height: AppConstants.spacingMedium),
-                            ...day.activities.map((activity) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _buildActivityCard(activity, context),
-                              );
-                            }),
-                          ],
-                        ),
-                      );
-                    }),
-
-                    // Tips Section (Material 3)
-                    Card(
-                      elevation: 2,
-                      shadowColor: const Color(0x140D0A2C),
-                      color: const Color(0xFFFAF5FF).withValues(alpha: 0.5), // purple-50
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: const BorderSide(
-                          color: Colors.transparent,
-                          width: 0,
-                        ),
+                          );
+                        },
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('🌟', style: TextStyle(fontSize: 24)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: AppConstants.spacingXlarge),
+
+                      // Weekly Plan
+                      ...weeklyPlan.map((day) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 children: [
                                   Text(
-                                    '생활 팁',
+                                    '${day.dayOfWeek} ${day.date}',
                                     style: TextStyle(
                                       fontSize:
-                                          16 *
+                                          18 *
                                           ResponsiveUtil.getTextScaleFactor(
                                             context,
                                           ),
                                       fontWeight: FontWeight.bold,
-                                      color: AppTheme.textPrimary,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '일주일 계획을 미리 확인하고, 빨래나 환기 청소는 공기질이 좋은 날을 활용하세요. '
-                                    '건강한 생활을 위해 미세먼지가 나쁜 날은 실내 활동을 추천드려요!',
-                                    style: TextStyle(
-                                      fontSize:
-                                          14 *
-                                          ResponsiveUtil.getTextScaleFactor(
-                                            context,
-                                          ),
-                                      color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
+                                  if (day.isToday) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primaryBlue,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '오늘',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(
+                                height: AppConstants.spacingMedium,
+                              ),
+                              ...day.activities.map((activity) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildActivityCard(activity, context),
+                                );
+                              }),
+                            ],
+                          ),
+                        );
+                      }),
+
+                      // Tips Section (Material 3)
+                      Card(
+                        elevation: 2,
+                        shadowColor: const Color(0x140D0A2C),
+                        color: const Color(
+                          0xFFFAF5FF,
+                        ).withValues(alpha: 0.5), // purple-50
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: const BorderSide(
+                            color: Colors.transparent,
+                            width: 0,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('🌟', style: TextStyle(fontSize: 24)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '생활 팁',
+                                      style: TextStyle(
+                                        fontSize:
+                                            16 *
+                                            ResponsiveUtil.getTextScaleFactor(
+                                              context,
+                                            ),
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '일주일 계획을 미리 확인하고, 빨래나 환기 청소는 공기질이 좋은 날을 활용하세요. '
+                                      '건강한 생활을 위해 미세먼지가 나쁜 날은 실내 활동을 추천드려요!',
+                                      style: TextStyle(
+                                        fontSize:
+                                            14 *
+                                            ResponsiveUtil.getTextScaleFactor(
+                                              context,
+                                            ),
+                                        color:
+                                            AppTheme.getRecommendationTextColor(
+                                              Theme.of(context).brightness,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 80,
-                    ), // Bottom padding for navigation bar
-                  ],
+                      const SizedBox(
+                        height: 80,
+                      ), // Bottom padding for navigation bar
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
-        ),
-      );
+        ],
+      ),
+    );
   }
 
   Widget _buildActivityCard(Activity activity, BuildContext context) {
@@ -256,10 +277,7 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
       shadowColor: const Color(0x140D0A2C),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(
-          color: Colors.transparent,
-          width: 0,
-        ),
+        side: const BorderSide(color: Colors.transparent, width: 0),
       ),
       color: activity.status.getBadgeColor().withValues(alpha: 0.4),
       child: Padding(
@@ -305,7 +323,9 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
                           style: TextStyle(
                             fontSize:
                                 12 * ResponsiveUtil.getTextScaleFactor(context),
-                            color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
+                            color: AppTheme.getRecommendationTextColor(
+                              Theme.of(context).brightness,
+                            ),
                           ),
                         ),
                         Text(
@@ -314,7 +334,9 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
                             fontSize:
                                 12 * ResponsiveUtil.getTextScaleFactor(context),
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
+                            color: AppTheme.getRecommendationTextColor(
+                              Theme.of(context).brightness,
+                            ),
                           ),
                         ),
                       ],
@@ -329,7 +351,9 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
                         style: TextStyle(
                           fontSize:
                               12 * ResponsiveUtil.getTextScaleFactor(context),
-                          color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
+                          color: AppTheme.getRecommendationTextColor(
+                            Theme.of(context).brightness,
+                          ),
                         ),
                       ),
                       Expanded(
@@ -338,7 +362,9 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
                           style: TextStyle(
                             fontSize:
                                 12 * ResponsiveUtil.getTextScaleFactor(context),
-                            color: AppTheme.getRecommendationTextColor(Theme.of(context).brightness),
+                            color: AppTheme.getRecommendationTextColor(
+                              Theme.of(context).brightness,
+                            ),
                           ),
                         ),
                       ),
