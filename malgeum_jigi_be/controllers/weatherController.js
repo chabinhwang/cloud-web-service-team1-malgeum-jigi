@@ -12,15 +12,15 @@ export async function getCurrentAirQuality(req, res) {
   }
 
   try {
-    // 1️⃣ 단기예보(온도, 습도)
+    // 단기예보(온도, 습도)
     const shortForecast = await getCurrentWeather(latitude, longitude);
     const { TA: temperature, HM: humidity } = shortForecast;
 
-    // 2️⃣ 황사(PM10)
+    // 황사(PM10)
     const dustInfo = await getDustInfo(latitude, longitude);
     const pm10 = Number(dustInfo?.PM10) || null;
 
-    // 3️⃣ 응답 구성
+    // 응답 구성
     const response = {
       success: true,
       code: "SUCCESS",
@@ -57,37 +57,42 @@ export async function getTodayEnvironment(req, res) {
   }
 
   try {
+    // 단기예보(온도, 습도)
+    const shortForecast = await getCurrentWeather(latitude, longitude);
+    const { TA: temperature, HM: humidity } = shortForecast;
+
     // 오늘의 일자료 조회 (평균기온, 최고기온, 최저기온, 평균습도)
     const dailyData = await getDailyWeather(latitude, longitude);
-    const { TA_AVG, TA_MAX, TA_MIN, HM_AVG } = dailyData;
+    const { TA_MAX, TA_MIN } = dailyData;
 
     // 데이터 유효성 처리 (음수는 유효 데이터 없음)
-    const avgTemperature = TA_AVG < 0 ? null : Number(TA_AVG);
-    const maxTemperature = TA_MAX < 0 ? null : Number(TA_MAX);
     const minTemperature = TA_MIN < 0 ? null : Number(TA_MIN);
-    const avgHumidity = HM_AVG < 0 ? null : Number(HM_AVG);
+    const maxTemperature = TA_MAX < 0 ? null : Number(TA_MAX);
 
+    // 오늘 날짜 (YYYY-MM-DD 형식)
+    const today = new Date().toISOString().split("T")[0];
+    
     // 응답 구성
     const response = {
       success: true,
       code: "SUCCESS",
       message: "오늘의 환경 데이터 조회 성공",
       data: {
-        avg_temperature: avgTemperature,
-        max_temperature: maxTemperature,
+        date: today,
         min_temperature: minTemperature,
-        avg_humidity: avgHumidity,
+        max_temperature: maxTemperature,
+        humidity: Number(humidity),
       },
       timestamp: new Date().toISOString(),
     };
 
     res.json(response);
   } catch (error) {
-    console.error("daily-weather API Error:", error.message);
+    console.error("KMA API Error:", error.message);
     res.status(500).json({
       success: false,
       code: "SERVER_ERROR",
-      message: "일자료 데이터 조회 중 오류가 발생했습니다.",
+      message: "데이터 조회 중 오류가 발생했습니다.",
       error: error.message,
     });
   }
