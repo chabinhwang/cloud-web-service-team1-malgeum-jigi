@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { getDailyWeather, getDustInfo, getGridXY, getTodayWeather } from "../services/kmaService.js";
+import { getDailyWeather, getDustInfo, getGridXY, getTodayWeather, getWeeklyWeather } from "../services/kmaService.js";
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ async function test() {
 
   try {
     console.log("📡 단기예보 요청 중...");
-    const result = await getTodayWeather(x, y);
+    const result = await getWeeklyWeather(x, y);
     console.log("✅ 단기예보 응답 결과:");
     console.log(result);
   } catch (err) {

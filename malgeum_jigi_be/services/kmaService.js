@@ -241,3 +241,65 @@ export async function getTodayWeather(x, y) {
     throw new Error("기상청 단기예보 데이터 조회 실패");
   }
 }
+
+/**
+ * 기상청 단기예보 API 호출 - 주간 생활 가이드용
+ * @param {number} x 격자 X 좌표
+ * @param {number} y 격자 Y 좌표
+ * @returns {Promise<Array<{category: string, fcstDate: string, fcstTime: string, fcstValue: string}>>}
+ */
+export async function getWeeklyWeather(x, y) {
+
+  // 오늘 날짜 (YYYYMMDD)
+  const now = new Date();
+  const baseDate = now.toISOString().slice(0, 10).replace(/-/g, ""); // ex: 20251026
+
+  // 요청 URL 구성
+  const url = `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst`;
+  const params = {
+    pageNo: 1,
+    numOfRows: 1000,
+    dataType: "JSON",
+    base_date: baseDate,
+    base_time: "0500", 
+    nx: x,
+    ny: y,
+    authKey: KMA_KEY,
+  };
+
+  try {
+    const response = await axios.get(url, { params });
+    const items = response.data?.response?.body?.items?.item;
+
+    if (!items) {
+      throw new Error("응답 데이터에 item이 없습니다.");
+    }
+
+  // 오늘 날짜 기준으로 4일치(오늘, 내일, 모레, 글피) 날짜 문자열 생성
+  const today = new Date();
+  const targetDates = Array.from({ length: 4 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    return d.toISOString().slice(0, 10).replace(/-/g, ""); // "YYYYMMDD" 형식
+  });
+
+    // 날짜, 카테고리 필터링
+    const filtered = items
+      .filter(
+        (it) =>
+          targetDates.includes(it.fcstDate) &&
+          (it.category === "TMP" || it.category === "SKY" || it.category === "PTY" || it.category === "POP" || it.category === "REH")
+      )
+      .map(({ category, fcstDate, fcstTime, fcstValue }) => ({
+        category,
+        fcstDate,
+        fcstTime,
+        fcstValue,
+      }));
+
+    return filtered;
+  } catch (error) {
+    console.error("기상청 단기예보 API 호출 실패:", error.message);
+    throw new Error("기상청 단기예보 데이터 조회 실패");
+  }
+}

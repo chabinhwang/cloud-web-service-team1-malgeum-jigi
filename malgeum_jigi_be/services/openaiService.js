@@ -150,3 +150,69 @@ export async function generateApplianceGuide(weatherData) {
     };
   }
 }
+
+/**
+ * 주간 날씨 데이터를 기반으로 생활 가이드 생성
+ */
+export async function generateWeeklyGuide(weatherData) {
+  try {
+    const prompt = `
+당신은 주간 날씨 예보를 바탕으로 생활 가이드를 생성하는 전문가입니다.
+날씨 데이터는 현재 날짜부터 3일 후까지의 시간별 예보 정보(TMP, SKY, PTY, POP, REH)를 포함합니다.
+이 데이터를 참고하여 날짜별로 기상 정보에 맞는 활동(예: 세탁, 청소, 환기, 운동, 야외활동 등)을 추천하는 "주간 생활 가이드"를 작성하세요.
+
+출력 형식은 **반드시 아래 JSON 구조로만** 출력하세요. (백틱이나 설명 문장, 마크다운 금지)
+{
+  "start_date": "YYYY-MM-DD",
+  "end_date": "YYYY-MM-DD",
+  "week_plans": [
+    {
+      "date": "YYYY-MM-DD",
+      "day_of_week": "월요일",
+      "activities": [
+        {
+          "type": "laundry",
+          "title": "세탁",
+          "status": "optimal | recommended | caution | prohibited",
+          "reason": "설명"
+        },
+        ...
+      ]
+    },
+    ...
+  ]
+}
+
+여기서 status는 다음 중 하나를 선택:
+- optimal: 매우 좋음
+- recommended: 권장됨
+- caution: 주의 필요
+- prohibited: 비권장
+
+다음은 주간 날씨 데이터입니다:
+${JSON.stringify(weatherData)}
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const rawText = completion.choices[0].message.content.trim();
+
+    // 코드블록(```json ... ```) 제거
+    const cleanedText = rawText.replace(/```json|```/g, "").trim();
+
+    try {
+      const parsed = JSON.parse(cleanedText);
+      return parsed;
+    } catch (err) {
+      console.warn("⚠️ OpenAI 응답 파싱 오류:", err.message);
+      console.warn("응답 내용:", rawText);
+      throw new Error("OpenAI 응답이 올바른 JSON 형식이 아닙니다.");
+    }
+  } catch (error) {
+    console.error("generateWeeklyGuide Error:", error);
+    throw new Error("OpenAI 요청 실패: " + error.message);
+  }
+}

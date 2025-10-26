@@ -1,6 +1,5 @@
-import e from "express";
-import { getCurrentWeather, getDustInfo, getGridXY, getTodayWeather } from "../services/kmaService.js";
-import { generateVentilationScore, generateOutdoorGuide, generateApplianceGuide } from "../services/openaiService.js";
+import { getCurrentWeather, getDustInfo, getGridXY, getTodayWeather, getWeeklyWeather } from "../services/kmaService.js";
+import { generateVentilationScore, generateOutdoorGuide, generateApplianceGuide, generateWeeklyGuide } from "../services/openaiService.js";
 
 export async function getVentilationScore(req, res) {
   const { latitude, longitude, location } = req.query;
@@ -137,6 +136,46 @@ export async function getApplianceGuide(req, res) {
       success: false,
       code: "SERVER_ERROR",
       message: "가전제품 가이드 생성 중 오류가 발생했습니다.",
+      error: error.message,
+    });
+  }
+}
+
+export async function getWeeklyGuide(req, res) {
+  const { latitude, longitude } = req.query;
+
+  if (!latitude || !longitude) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_REQUEST",
+      message: "latitude, longitude 파라미터가 필요합니다.",
+    });
+  }
+
+  try {
+    // 위경도 → 격자좌표 변환
+    const { x, y } = await getGridXY(latitude, longitude);
+
+    // 단기예보로 주간 날씨 조회
+    const weatherData = await getWeeklyWeather(x, y);
+
+    // OpenAI로 주간 생활 가이드 생성
+    const weeklyGuide = await generateWeeklyGuide(weatherData);
+
+    // 최종 응답
+    res.json({
+      success: true,
+      code: "SUCCESS",
+      message: "주간 생활 가이드 조회 성공",
+      data: weeklyGuide,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("getApplianceGuide Error:", error.message);
+    res.status(500).json({
+      success: false,
+      code: "SERVER_ERROR",
+      message: "주간 생활 가이드 생성 중 오류가 발생했습니다.",
       error: error.message,
     });
   }
