@@ -52,8 +52,8 @@ class ApiDataBuilder<T> extends StatelessWidget {
       );
     }
 
-    // 데이터 표시
-    return builder(data!);
+    // 데이터 표시 (null 체크 완료)
+    return builder(data as T);
   }
 
   /// 기본 로딩 위젯

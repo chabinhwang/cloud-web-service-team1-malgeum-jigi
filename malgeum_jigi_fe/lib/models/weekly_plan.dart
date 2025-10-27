@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+// ignore: constant_identifier_names
 enum ActivityType {
   laundry,
   exercise,
@@ -8,9 +9,11 @@ enum ActivityType {
   indoor,
   warning,
   dishwasher,
+  // ignore: constant_identifier_names
   air_purifier,
   refrigerator,
   dryer,
+  // ignore: constant_identifier_names
   air_conditioner,
   vacuum,
   outdoor,
