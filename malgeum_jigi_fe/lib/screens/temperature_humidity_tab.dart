@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive_util.dart';
 import '../utils/location_provider.dart';
@@ -80,6 +81,12 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
     await _loadData();
   }
 
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    final formatter = DateFormat('M월 d일 EEEE', 'ko_KR');
+    return formatter.format(now);
+  }
+
   @override
   Widget build(BuildContext context) {
     final todayData = _todayData ??
@@ -115,7 +122,7 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
 
                     // Appliance Guide
                     Text(
-                      '📅 오늘 (10월 22일 수요일)',
+                      '📅 오늘 (${_getFormattedDate()})',
                       style: TextStyle(
                         fontSize:
                             18 * ResponsiveUtil.getTextScaleFactor(context),
