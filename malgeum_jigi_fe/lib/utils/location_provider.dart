@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LocationProvider extends ChangeNotifier {
   double? _latitude;
@@ -61,8 +63,13 @@ class LocationProvider extends ChangeNotifier {
       _latitude = position.latitude;
       _longitude = position.longitude;
 
-      // 기본 위치명 설정 (역지오코딩은 나중에 구현 가능)
-      _locationName = '현재 위치';
+      // 역지오코딩: 좌표 → 주소명 변환 (Nominatim API 사용)
+      try {
+        _locationName = await _reverseGeocode(position.latitude, position.longitude);
+      } catch (e) {
+        // 역지오코딩 실패 시 기본값 사용
+        _locationName = '현재 위치';
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -91,5 +98,42 @@ class LocationProvider extends ChangeNotifier {
     _locationName = '서울특별시 강남구';
     _error = null;
     notifyListeners();
+  }
+
+  /// Nominatim API를 사용하여 좌표를 주소로 변환
+  /// [latitude] 위도
+  /// [longitude] 경도
+  /// 반환값: 한국 형식의 주소 (예: "서울특별시 중구") 또는 실패 시 "현재 위치"
+  Future<String> _reverseGeocode(double latitude, double longitude) async {
+    try {
+      final String url =
+          'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&accept-language=ko';
+
+      final response = await http.get(Uri.parse(url)).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw TimeoutException('Geocoding request timeout'),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final address = json['address'] as Map<String, dynamic>?;
+
+        if (address != null) {
+          final String? city = address['city'] as String?;
+          final String? borough = address['borough'] as String?;
+
+          // city와 borough 모두 있으면 "시 구" 형식으로 반환
+          if (city != null && city.isNotEmpty && borough != null && borough.isNotEmpty) {
+            return '$city $borough';
+          } else if (city != null && city.isNotEmpty) {
+            return city;
+          }
+        }
+      }
+
+      return '현재 위치';
+    } catch (e) {
+      return '현재 위치';
+    }
   }
 }

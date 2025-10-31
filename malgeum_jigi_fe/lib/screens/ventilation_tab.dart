@@ -26,7 +26,6 @@ class _VentilationTabState extends State<VentilationTab> {
   bool _showDetails = false;
   bool _showOutdoorGuide = false;
   bool _isLoading = false;
-  String? _error;
 
   int? _ventilationScore;
   String? _ventilationDescription;
@@ -45,7 +44,6 @@ class _VentilationTabState extends State<VentilationTab> {
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
-      _error = null;
     });
 
     try {
@@ -106,7 +104,6 @@ class _VentilationTabState extends State<VentilationTab> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'API 데이터를 불러올 수 없습니다: ${e.toString()}';
           _isLoading = false;
           // 기본값 설정 (오류 시)
           _ventilationScore = AppConstants.defaultVentilationScore;
@@ -122,8 +119,6 @@ class _VentilationTabState extends State<VentilationTab> {
     await _loadData();
   }
 
-
-  @override
   Widget _buildLoadingState() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 100.0),
@@ -144,6 +139,7 @@ class _VentilationTabState extends State<VentilationTab> {
     );
   }
 
+  @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final dateFormat = DateFormat('yyyy년 MM월 dd일 EEEE a h:mm', 'ko_KR');

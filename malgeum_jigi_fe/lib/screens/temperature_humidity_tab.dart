@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive_util.dart';
 import '../utils/location_provider.dart';
@@ -21,9 +22,6 @@ class TemperatureHumidityTab extends StatefulWidget {
 }
 
 class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
-  bool _isLoading = false;
-  String? _error;
-
   TodayEnvironmentData? _todayData;
   List<ApplianceGuide> _appliances = [];
 
@@ -37,11 +35,6 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
     try {
       final locationProvider = context.read<LocationProvider>();
 
@@ -71,15 +64,11 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
 
           // 가전 가이드 데이터 파싱
           _appliances = ApiParser.parseAppliances(applianceResponse);
-
-          _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'API 데이터를 불러올 수 없습니다: ${e.toString()}';
-          _isLoading = false;
           // 기본값 설정
           _todayData = ApiParser.parseTodayEnvironment(null);
           _appliances = ApiParser.parseAppliances(null);
@@ -90,6 +79,12 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
 
   Future<void> _refreshData() async {
     await _loadData();
+  }
+
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    final formatter = DateFormat('M월 d일 EEEE', 'ko_KR');
+    return formatter.format(now);
   }
 
   @override
@@ -127,7 +122,7 @@ class _TemperatureHumidityTabState extends State<TemperatureHumidityTab> {
 
                     // Appliance Guide
                     Text(
-                      '📅 오늘 (10월 22일 수요일)',
+                      '📅 오늘 (${_getFormattedDate()})',
                       style: TextStyle(
                         fontSize:
                             18 * ResponsiveUtil.getTextScaleFactor(context),

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
-import '../utils/responsive_util.dart';
+import '../theme/text_styles.dart';
 import '../utils/location_provider.dart';
 import '../utils/api_parser.dart';
 import '../widgets/tab_header.dart';
-import '../widgets/status_badge.dart';
 import '../widgets/common/app_card.dart';
+import '../widgets/life_guide/day_plan_card.dart';
 import '../models/weekly_plan.dart';
 import '../services/api_service.dart';
 
@@ -21,13 +21,13 @@ class LifeGuideTab extends StatefulWidget {
 }
 
 class _LifeGuideTabState extends State<LifeGuideTab> {
-  bool _isLoading = false;
-  String? _error;
-  List<DayPlan> _weeklyPlan = [];
+  late List<DayPlan> _weeklyPlan;
 
   @override
   void initState() {
     super.initState();
+    // 기본값으로 초기화
+    _weeklyPlan = ApiParser.parseWeeklyPlan(null);
     // 빌드가 완료된 후에 데이터 로드 (Provider 상태 변경 에러 방지)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
@@ -35,11 +35,6 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
     try {
       final locationProvider = context.read<LocationProvider>();
 
@@ -62,15 +57,12 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
         setState(() {
           // 주간 계획 데이터 파싱
           _weeklyPlan = ApiParser.parseWeeklyPlan(weeklyPlanResponse);
-          _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'API 데이터를 불러올 수 없습니다: ${e.toString()}';
-          _isLoading = false;
-          // 기본값 설정 (목업 데이터)
+          // 에러 시 기본값 유지 (이미 initState에서 설정됨)
           _weeklyPlan = ApiParser.parseWeeklyPlan(null);
         });
       }
@@ -83,9 +75,7 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
 
   @override
   Widget build(BuildContext context) {
-    final weeklyPlan = _weeklyPlan.isEmpty
-        ? ApiParser.parseWeeklyPlan(null)
-        : _weeklyPlan;
+    final weeklyPlan = _weeklyPlan;
 
     return RefreshIndicator(
       onRefresh: _refreshData,
@@ -102,7 +92,7 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
+                constraints: const BoxConstraints(maxWidth: AppConstants.contentMaxWidth),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -110,142 +100,19 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
                       // Header
                       Text(
                         '주간 생활 플랜',
-                        style: TextStyle(
-                          fontSize:
-                              24 * ResponsiveUtil.getTextScaleFactor(context),
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppTextStyles.title2(context),
                       ),
                       const SizedBox(height: AppConstants.spacingSmall),
-                      Builder(
-                        builder: (context) {
-                          // 날짜 범위 동적으로 표시
-                          String dateRange = '로딩 중...';
-                          if (weeklyPlan.isNotEmpty) {
-                            final firstDate = weeklyPlan.first.date;
-                            final lastDate = weeklyPlan.last.date;
-                            dateRange = '$firstDate ~ $lastDate';
-                          }
-                          return Text(
-                            dateRange,
-                            style: TextStyle(
-                              fontSize:
-                                  14 *
-                                  ResponsiveUtil.getTextScaleFactor(context),
-                              color: AppTheme.getLocationTimeTextColor(
-                                Theme.of(context).brightness,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                      _buildDateRange(weeklyPlan, context),
                       const SizedBox(height: AppConstants.spacingXlarge),
 
                       // Weekly Plan
-                      ...weeklyPlan.map((day) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    '${day.dayOfWeek} ${day.date}',
-                                    style: TextStyle(
-                                      fontSize:
-                                          18 *
-                                          ResponsiveUtil.getTextScaleFactor(
-                                            context,
-                                          ),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  if (day.isToday) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primaryBlue,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        '오늘',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(
-                                height: AppConstants.spacingMedium,
-                              ),
-                              ...day.activities.map((activity) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: _buildActivityCard(activity, context),
-                                );
-                              }),
-                            ],
-                          ),
-                        );
-                      }),
+                      ...weeklyPlan.map((day) => DayPlanCard(day: day)),
 
-                      // Tips Section (Material 3)
-                      AppCard(
-                        backgroundColor: const Color(0xFFFAF5FF).withValues(alpha: 0.5),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('🌟', style: TextStyle(fontSize: 24)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '생활 팁',
-                                    style: TextStyle(
-                                      fontSize:
-                                          16 *
-                                          ResponsiveUtil.getTextScaleFactor(
-                                            context,
-                                          ),
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '일주일 계획을 미리 확인하고, 빨래나 환기 청소는 공기질이 좋은 날을 활용하세요. '
-                                    '건강한 생활을 위해 미세먼지가 나쁜 날은 실내 활동을 추천드려요!',
-                                    style: TextStyle(
-                                      fontSize:
-                                          14 *
-                                          ResponsiveUtil.getTextScaleFactor(
-                                            context,
-                                          ),
-                                      color:
-                                          AppTheme.getRecommendationTextColor(
-                                            Theme.of(context).brightness,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // Tips Section
+                      _buildTipsSection(context),
                       const SizedBox(
-                        height: 80,
+                        height: AppConstants.spacingXxlarge,
                       ), // Bottom padding for navigation bar
                     ],
                   ),
@@ -258,97 +125,47 @@ class _LifeGuideTabState extends State<LifeGuideTab> {
     );
   }
 
-  Widget _buildActivityCard(Activity activity, BuildContext context) {
+  /// 날짜 범위 표시
+  Widget _buildDateRange(List<DayPlan> weeklyPlan, BuildContext context) {
+    String dateRange = '로딩 중...';
+    if (weeklyPlan.isNotEmpty) {
+      final firstDate = weeklyPlan.first.date;
+      final lastDate = weeklyPlan.last.date;
+      dateRange = '$firstDate ~ $lastDate';
+    }
+    return Text(
+      dateRange,
+      style: AppTextStyles.locationTime(context),
+    );
+  }
+
+  /// 생활 팁 섹션
+  Widget _buildTipsSection(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final tipsBackground = brightness == Brightness.dark
+        ? AppTheme.darkTipsBackgroundColor
+        : AppTheme.tipsBackgroundColor;
+
     return AppCard(
-      backgroundColor: activity.status.getBadgeColor().withValues(alpha: 0.4),
-      padding: const EdgeInsets.all(AppConstants.spacingLarge),
+      backgroundColor: tipsBackground.withValues(alpha: 0.5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            activity.emoji,
-            style: const TextStyle(fontSize: AppConstants.iconSizeXlarge),
-          ),
-          const SizedBox(width: AppConstants.spacingMedium),
+          const Text('🌟', style: TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      activity.title,
-                      style: TextStyle(
-                        fontSize:
-                            16 * ResponsiveUtil.getTextScaleFactor(context),
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: AppConstants.spacingSmall),
-                    StatusBadge(
-                      status: activity.status,
-                      label: activity.statusLabel,
-                      fontSize:
-                          12 * ResponsiveUtil.getTextScaleFactor(context),
-                    ),
-                  ],
+                Text(
+                  '생활 팁',
+                  style: AppTextStyles.headingSmall(context),
                 ),
-                if (activity.time != null) ...[
-                  const SizedBox(height: AppConstants.spacingSmall),
-                  Row(
-                    children: [
-                      Text(
-                        '시간: ',
-                        style: TextStyle(
-                          fontSize:
-                              12 * ResponsiveUtil.getTextScaleFactor(context),
-                          color: AppTheme.getRecommendationTextColor(
-                            Theme.of(context).brightness,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        activity.time!,
-                        style: TextStyle(
-                          fontSize:
-                              12 * ResponsiveUtil.getTextScaleFactor(context),
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.getRecommendationTextColor(
-                            Theme.of(context).brightness,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: AppConstants.spacingSmall),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '이유: ',
-                      style: TextStyle(
-                        fontSize:
-                            12 * ResponsiveUtil.getTextScaleFactor(context),
-                        color: AppTheme.getRecommendationTextColor(
-                          Theme.of(context).brightness,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '"${activity.reason}"',
-                        style: TextStyle(
-                          fontSize:
-                              12 * ResponsiveUtil.getTextScaleFactor(context),
-                          color: AppTheme.getRecommendationTextColor(
-                            Theme.of(context).brightness,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  '일주일 계획을 미리 확인하고, 빨래나 환기 청소는 공기질이 좋은 날을 활용하세요. '
+                  '건강한 생활을 위해 미세먼지가 나쁜 날은 실내 활동을 추천드려요!',
+                  style: AppTextStyles.recommendation(context),
                 ),
               ],
             ),

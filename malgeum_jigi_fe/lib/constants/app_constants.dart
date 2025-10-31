@@ -197,4 +197,13 @@ class AppConstants {
 
   /// 기본 평균 습도
   static const int defaultAvgHumidity = 72;
+
+  // ============================================
+  // Score Thresholds (점수 임계값)
+  // ============================================
+  /// 우수 점수 임계값
+  static const int scoreThresholdGood = 70;
+
+  /// 보통 점수 임계값
+  static const int scoreThresholdOk = 40;
 }

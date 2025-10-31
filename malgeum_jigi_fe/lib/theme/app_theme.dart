@@ -475,6 +475,14 @@ class AppTheme {
   // Dark Mode Activity Status Text Colors
   static const Color darkActivityCautionText = Color(0xFFFFD700); // gold
 
+  // ========== Special Background Colors ==========
+
+  /// Tips Section Background Color (라이트 모드)
+  static const Color tipsBackgroundColor = Color(0xFFFAF5FF);
+
+  /// Tips Section Background Color (다크 모드)
+  static const Color darkTipsBackgroundColor = Color(0xFF2A1F4D);
+
   /// Get activity border color based on status and brightness
   static Color getActivityBorderColor(String status, Brightness brightness) {
     final isDark = brightness == Brightness.dark;
