@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 import '../theme/text_styles.dart';
 import '../utils/location_provider.dart';
 import '../utils/api_parser.dart';
-import '../widgets/tab_header.dart';
+import '../widgets/common/tab_header.dart';
 import '../widgets/common/app_card.dart';
 import '../widgets/life_guide/day_plan_card.dart';
 import '../models/weekly_plan.dart';

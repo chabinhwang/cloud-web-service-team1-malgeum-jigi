@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../constants/app_constants.dart';
-import '../models/weekly_plan.dart';
+import '../../constants/app_constants.dart';
+import '../../models/weekly_plan.dart';
 
 /// 활동 상태를 표시하는 배지 위젯
 class StatusBadge extends StatelessWidget {

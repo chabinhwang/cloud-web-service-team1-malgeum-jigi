@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 import '../utils/responsive_util.dart';
 import '../utils/location_provider.dart';
 import '../utils/api_parser.dart';
-import '../widgets/tab_header.dart';
+import '../widgets/common/tab_header.dart';
 import '../widgets/temperature/environment_summary_card.dart';
 import '../widgets/temperature/appliance_card.dart';
 import '../models/air_quality_data.dart';
