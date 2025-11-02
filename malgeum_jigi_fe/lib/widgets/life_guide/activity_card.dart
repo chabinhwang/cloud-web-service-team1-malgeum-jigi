@@ -3,7 +3,7 @@ import '../../constants/app_constants.dart';
 import '../../models/weekly_plan.dart';
 import '../../theme/text_styles.dart';
 import '../../utils/responsive_util.dart';
-import '../status_badge.dart';
+import '../common/status_badge.dart';
 import '../common/app_card.dart';
 
 /// 개별 활동 카드

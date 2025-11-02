@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/text_styles.dart';
 import '../../utils/responsive_util.dart';
-import '../radial_gauge.dart';
+import '../common/radial_gauge.dart';
 import '../common/app_card.dart';
 
 /// 외출 가이드를 표시하는 카드 위젯

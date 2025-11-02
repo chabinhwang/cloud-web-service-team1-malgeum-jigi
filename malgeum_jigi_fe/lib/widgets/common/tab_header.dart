@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../utils/responsive_util.dart';
+import '../../constants/app_constants.dart';
+import '../../utils/responsive_util.dart';
 
 class TabHeader extends StatelessWidget {
   final String title;
@@ -18,7 +19,9 @@ class TabHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: MediaQuery.of(context).size.width < 600 ? 192 : 256,
+      expandedHeight: ResponsiveUtil.isMobile(context)
+          ? AppConstants.mobileHeaderHeight
+          : AppConstants.desktopHeaderHeight,
       floating: false,
       pinned: true,
       backgroundColor: Colors.white,
@@ -28,7 +31,9 @@ class TabHeader extends StatelessWidget {
           // Calculate progress based on scroll position
           final double expandRatio =
               constraints.maxHeight /
-              (MediaQuery.of(context).size.width < 600 ? 192 : 256);
+              (ResponsiveUtil.isMobile(context)
+                  ? AppConstants.mobileHeaderHeight
+                  : AppConstants.desktopHeaderHeight);
           final bool isCollapsed = expandRatio <= 1.1;
 
           return FlexibleSpaceBar(
