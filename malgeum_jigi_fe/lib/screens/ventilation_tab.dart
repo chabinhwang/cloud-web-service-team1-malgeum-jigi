@@ -153,7 +153,7 @@ class _VentilationTabState extends State<VentilationTab> {
           title: '실시간 환기 가이드',
           backgroundImage:
               'https://images.unsplash.com/photo-1527854269107-68e2d1343e1d',
-          subtitle: '신선한 공기로 건강한 실내 환경을 만드세요',
+          subtitle: context.watch<LocationProvider>().locationName ?? '위치를 불러오는 중...',
           scrollController: widget.scrollController,
         ),
         SliverToBoxAdapter(
