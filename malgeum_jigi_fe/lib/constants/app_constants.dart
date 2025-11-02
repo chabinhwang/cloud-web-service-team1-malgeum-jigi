@@ -156,7 +156,7 @@ class AppConstants {
   // ============================================
   // Navigation Bar (네비게이션 바)
   // ============================================
-  /// 모바일 하단 네비게이션 바 좌우 패딩
+  /// 모바일 하단 네비게이션 바 좌우 패딩 (기본값)
   static const double mobileNavHorizontalPadding = 100.0;
 
   /// 모바일 하단 네비게이션 바 하단 패딩
@@ -164,6 +164,20 @@ class AppConstants {
 
   /// 모바일 하단 네비게이션 바 둥근 모서리
   static const double mobileNavBorderRadius = 30.0;
+
+  /// 반응형 모바일 네비게이션 바 좌우 패딩
+  /// 화면 너비에 따라 동적으로 패딩을 조정합니다
+  /// - 480px 미만: 16.0 (매우 좁은 화면)
+  /// - 480px ~ 600px: 40.0 (좁은 모바일)
+  /// - 600px 이상: 100.0 (기본값)
+  static double getMobileNavHorizontalPadding(double screenWidth) {
+    if (screenWidth < 480) {
+      return 16.0;
+    } else if (screenWidth < 600) {
+      return 40.0;
+    }
+    return 100.0;
+  }
 
   // ============================================
   // Default Data Values (기본 데이터값)
