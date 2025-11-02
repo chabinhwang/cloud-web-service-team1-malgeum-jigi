@@ -25,6 +25,9 @@ class MobileBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding =
+        AppConstants.getMobileNavHorizontalPadding(screenWidth);
 
     return Positioned(
       bottom: 0,
@@ -32,9 +35,9 @@ class MobileBottomNav extends StatelessWidget {
       right: 0,
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(
-            left: AppConstants.mobileNavHorizontalPadding,
-            right: AppConstants.mobileNavHorizontalPadding,
+          padding: EdgeInsets.only(
+            left: horizontalPadding,
+            right: horizontalPadding,
             bottom: AppConstants.mobileNavBottomPadding,
           ),
           child: ClipRRect(
