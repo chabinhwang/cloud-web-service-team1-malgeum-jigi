@@ -198,7 +198,7 @@ export async function getTodayWeather(x, y) {
 
   // 오늘 날짜 (YYYYMMDD)
   const now = new Date();
-  const baseDate = now.toISOString().slice(0, 10).replace(/-/g, ""); // ex: 20251026
+  const baseDate = now.toLocaleDateString('en-CA').replace(/-/g, "");
 
   // 요청 URL 구성
   const url = `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst`;
@@ -252,7 +252,7 @@ export async function getWeeklyWeather(x, y) {
 
   // 오늘 날짜 (YYYYMMDD)
   const now = new Date();
-  const baseDate = now.toISOString().slice(0, 10).replace(/-/g, ""); // ex: 20251026
+  const baseDate = now.toLocaleDateString('en-CA').replace(/-/g, "");
 
   // 요청 URL 구성
   const url = `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst`;
