@@ -5,20 +5,37 @@ import { getNearestStation } from "../utils/locationUtil.js";
 dotenv.config();
 const KMA_KEY = process.env.KMA_KEY;
 
-// 현재 시각 기준, 가장 가까운 과거 정시(00분) 구하기
+// 한국 시간 기준 Date 객체 반환
+function getKoreaDate() {
+  // 한국 시간으로 현재 시각 문자열 생성
+  const nowStr = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(new Date());
+
+  // 문자열을 다시 Date 객체로 변환
+  return new Date(nowStr);
+}
+
+// 현재 시각 기준 가장 가까운 과거 정시(00분) 구하기
 function getClosestPastHour() {
-  const now = new Date();
+  const now = getKoreaDate();
   const minutes = now.getMinutes();
 
   if (minutes === 0) {
-    // 00분이면 1시간 전으로
     now.setHours(now.getHours() - 1);
   }
-  now.setMinutes(0, 0, 0); // 분, 초, 밀리초를 0으로
+  now.setMinutes(0, 0, 0);
   return now;
 }
 
-// Date 객체 → YYYYMMDDHHMI (예: 202510241700)
+// 현재 날짜 및 시간(YYYYMMDDHHMI) 구하기
 function formatDateToKmaTm(date) {
   const YYYY = date.getFullYear();
   const MM = String(date.getMonth() + 1).padStart(2, "0");
@@ -30,7 +47,7 @@ function formatDateToKmaTm(date) {
 
 // 오늘 날짜(YYYYMMDD) 구하기
 function getTodayDateString() {
-  const now = new Date();
+  const now = getKoreaDate();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
@@ -45,6 +62,7 @@ export async function getCurrentWeather(lat, lon, address) {
 
     // 2️⃣ tm 파라미터: 가장 가까운 과거 정시
     const tm = formatDateToKmaTm(getClosestPastHour());
+    console.log("⏰ KMA 현재 기상 조회 기준 시각(tm):", tm);
 
     // 3️⃣ 요청 URL 구성
     const url = `https://apihub.kma.go.kr/api/typ01/url/kma_sfctm2.php?tm=${tm}&stn=${stn}&help=0&authKey=${KMA_KEY}`;
@@ -74,8 +92,8 @@ export async function getCurrentWeather(lat, lon, address) {
     // 7️⃣ 필요한 값만 반환
     return { stn, tm, WS, TA, HM, RN };
   } catch (err) {
-    console.error("❌ 단기예보 조회 실패:", err.message);
-    throw new Error("단기예보 조회 실패");
+    console.error("❌ 현재 기상 정보 조회 실패:", err.message);
+    throw new Error("현재 기상 정보 조회 실패");
   }
 }
 
@@ -125,6 +143,7 @@ export async function getDailyWeather(lat, lon, address) {
 
     // 2️⃣ tm 파라미터: 가장 가까운 과거 정시
     const tm = getTodayDateString();
+    console.log("⏰ KMA 일자료 조회 기준 시각(tm):", tm);
 
     // 3️⃣ 요청 URL 구성
     const url = `https://apihub.kma.go.kr/api/typ01/url/kma_sfcdd.php?tm=${tm}&stn=${stn}&help=0&authKey=${KMA_KEY}`;
@@ -183,7 +202,7 @@ export async function getGridXY(lat, lon) {
 
     return { x, y };
   } catch (error) {
-    console.error("격자 변환 요청 실패:", error.message);
+    console.error("❌ 격자 변환 요청 실패:", error.message);
     throw new Error("기상청 격자 변환 API 호출 실패");
   }
 }
@@ -197,8 +216,7 @@ export async function getGridXY(lat, lon) {
 export async function getTodayWeather(x, y) {
 
   // 오늘 날짜 (YYYYMMDD)
-  const now = new Date();
-  const baseDate = now.toLocaleDateString('en-CA').replace(/-/g, "");
+  const baseDate = getTodayDateString();
 
   // 요청 URL 구성
   const url = `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst`;
@@ -237,7 +255,7 @@ export async function getTodayWeather(x, y) {
 
     return filtered;
   } catch (error) {
-    console.error("기상청 단기예보 API 호출 실패:", error.message);
+    console.error("❌ 기상청 단기예보 API 호출 실패:", error.message);
     throw new Error("기상청 단기예보 데이터 조회 실패");
   }
 }
@@ -251,8 +269,7 @@ export async function getTodayWeather(x, y) {
 export async function getWeeklyWeather(x, y) {
 
   // 오늘 날짜 (YYYYMMDD)
-  const now = new Date();
-  const baseDate = now.toLocaleDateString('en-CA').replace(/-/g, "");
+  const baseDate = getTodayDateString();
 
   // 요청 URL 구성
   const url = `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst`;
@@ -276,7 +293,7 @@ export async function getWeeklyWeather(x, y) {
     }
 
   // 오늘 날짜 기준으로 4일치(오늘, 내일, 모레, 글피) 날짜 문자열 생성
-  const today = new Date();
+  const today = getKoreaDate();
   const targetDates = Array.from({ length: 4 }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
@@ -299,7 +316,7 @@ export async function getWeeklyWeather(x, y) {
 
     return filtered;
   } catch (error) {
-    console.error("기상청 단기예보 API 호출 실패:", error.message);
+    console.error("❌ 기상청 단기예보 API 호출 실패:", error.message);
     throw new Error("기상청 단기예보 데이터 조회 실패");
   }
 }
