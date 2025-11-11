@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
 // 절대 경로 기준 JSON 파일 로드
 const stationsPath = path.join(process.cwd(), "data", "stations.json");
