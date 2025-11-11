@@ -1,14 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
 // 절대 경로 기준 JSON 파일 로드
 const stationsPath = path.join(process.cwd(), "data", "stations.json");
 const stations = JSON.parse(fs.readFileSync(stationsPath, "utf8"));
-
-// JSON 파일 로드
-//const stationsPath = path.resolve("data", "stations.json");
-//const stations = JSON.parse(fs.readFileSync(stationsPath, "utf8"));
 
 // 위경도 거리 계산 (단순 유클리드 거리)
 function getDistance(lat1, lon1, lat2, lon2) {
