@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import corsMiddleware from "./config/corsConfig.js";
 import weatherRoutes from './routes/weatherRoutes.js';
 import guideRoutes from './routes/guideRoutes.js';
+import prefetchController from "./controllers/prefetchController.js";
 
 dotenv.config(); // .env 파일 로드
 
@@ -18,6 +19,10 @@ app.use(express.json());
 // 라우팅
 app.use('/api/weather', weatherRoutes);
 app.use('/api/guides', guideRoutes);
+
+// 프리패칭 트리거 엔드포인트
+app.get("/prefetch", prefetchController.handlePrefetch);
+
 
 // 기본 라우트
 app.get("/", (req, res) => {
