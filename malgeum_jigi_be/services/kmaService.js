@@ -6,6 +6,7 @@ import {
   formatDateToKmaTm,
   getTodayDateString,
   getFutureDateStrings,
+  getAdjustedBaseDate,
 } from "../utils/datetimeUtil.js";
 
 dotenv.config();
@@ -36,7 +37,7 @@ async function fetchKmaData(url, params, description) {
 
 // ✅ 단기예보 공통 함수
 async function getForecastData(x, y, filterFn, description) {
-  const baseDate = getTodayDateString();
+  const baseDate = getAdjustedBaseDate();
   const url = `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst`;
   const params = {
     pageNo: 1,

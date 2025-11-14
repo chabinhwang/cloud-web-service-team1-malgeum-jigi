@@ -1,5 +1,7 @@
 import { getCurrentWeather, getDustInfo, getGridXY, getTodayWeather, getWeeklyWeather } from "../services/kmaService.js";
 import { generateVentilationScore, generateOutdoorGuide, generateApplianceGuide, generateWeeklyGuide } from "../services/openaiService.js";
+import { connectToDatabase } from "../db/mongoClient.js";
+import { getNearestStation } from "../utils/locationUtil.js";
 
 export async function getVentilationScore(req, res) {
   const { latitude, longitude, location_name } = req.query;
@@ -13,20 +15,50 @@ export async function getVentilationScore(req, res) {
     });
   }
 
+  // 가장 가까운 기상 관측소 찾기
+  const stn = await getNearestStation(latitude, longitude, "");
+
   try {
-    // 1️⃣ 기상청 단기예보 (온도, 습도, 강수량)
+    const { db } = await connectToDatabase();
+    const ventilationCol = db.collection("ventilation");
+
+    const cached = await ventilationCol.find({ stn }).sort({ timestamp: -1 }).limit(1).toArray();
+
+    if (cached.length > 0) {
+      const latest = cached[0];
+      console.log(`📦 환기 점수 캐시 사용 (${stn})`);
+
+      return res.json({
+        success: true,
+        code: "SUCCESS",
+        message: "환기 점수 조회 성공 (from cache)",
+        data: {
+          score: latest.score,
+          status: latest.status,
+          emoji: latest.emoji,
+          location: latest.location || location,
+          description: latest.description,
+        },
+        timestamp: latest.timestamp,
+      });
+    }
+
+    // 캐시 데이터가 없을 경우
+    console.log(`📡 환기 점수 실시간 생성 (${stn})`);
+
+    // 기상청 단기예보 (온도, 습도, 강수량)
     const forecast = await getCurrentWeather(latitude, longitude, location);
     const { TA: temperature, HM: humidity, RN: rainfallRaw } = forecast;
     const rainfall = rainfallRaw < 0 ? 0 : rainfallRaw;
 
-    // 2️⃣ 미세먼지 (PM10)
+    // 미세먼지 (PM10)
     const dust = await getDustInfo(latitude, longitude, location);
     const pm10 = Number(dust?.PM10) || 0;
 
-    // 3️⃣ OpenAI로 환기 점수 생성
+    // OpenAI로 환기 점수 생성
     const aiResult = await generateVentilationScore(temperature, humidity, rainfall, pm10);
 
-    // 4️⃣ 응답 구성
+    // 응답 구성
     const response = {
       success: true,
       code: "SUCCESS",
@@ -40,8 +72,8 @@ export async function getVentilationScore(req, res) {
       },
       timestamp: new Date().toISOString(),
     };
-
     res.json(response);
+
   } catch (error) {
     console.error("🚨 /api/guides/ventilation Error:", error.message);
     res.status(500).json({
@@ -64,20 +96,48 @@ export async function getOutdoorGuide(req, res) {
     });
   }
 
+  // 가장 가까운 기상 관측소 찾기
+  const stn = await getNearestStation(latitude, longitude, "");
+
   try {
-    // 1️⃣ 기상청 단기예보
+    const { db } = await connectToDatabase();
+    const outdoorCol = db.collection("outdoor");
+
+    const cached = await outdoorCol.find({ stn }).sort({ timestamp: -1 }).limit(1).toArray();
+
+    if (cached.length > 0) {
+      const latest = cached[0];
+      console.log(`📦 외출 가이드 캐시 사용 (${stn})`);
+
+      return res.json({
+        success: true,
+        code: "SUCCESS",
+        message: "외출 가이드 조회 성공 (from cache)",
+        data: {
+          advisability: latest.advisability,
+          summary: latest.summary,
+          recommendations: latest.recommendations,
+        },
+        timestamp: latest.timestamp,
+      });
+    }
+
+    // 캐시 데이터가 없을 경우
+    console.log(`📡 외출 가이드 실시간 생성 (${stn})`);
+
+    // 기상청 단기예보
     const forecast = await getCurrentWeather(latitude, longitude, "현재 위치");
     const { TA: temperature, HM: humidity, RN: rainfallRaw } = forecast;
     const rainfall = rainfallRaw < 0 ? 0 : rainfallRaw;
 
-    // 2️⃣ 황사 (PM10)
+    // 황사 (PM10)
     const dust = await getDustInfo(latitude, longitude, "현재 위치");
     const pm10 = Number(dust?.PM10) || 0;
 
-    // 3️⃣ OpenAI로 외출 가이드 생성
+    // OpenAI로 외출 가이드 생성
     const aiResult = await generateOutdoorGuide(temperature, humidity, rainfall, pm10);
 
-    // 4️⃣ 응답 구성
+    // 응답 구성
     const response = {
       success: true,
       code: "SUCCESS",
@@ -89,8 +149,8 @@ export async function getOutdoorGuide(req, res) {
       },
       timestamp: new Date().toISOString(),
     };
-
     res.json(response);
+
   } catch (error) {
     console.error("🚨 /api/guides/outdoor Error:", error.message);
     res.status(500).json({
