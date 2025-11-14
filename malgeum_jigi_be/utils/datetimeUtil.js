@@ -54,3 +54,25 @@ export function getFutureDateStrings(days) {
     return d.toISOString().slice(0, 10).replace(/-/g, "");
   });
 }
+
+/** 05:00 기준 보정된 날짜 */
+export function getAdjustedBaseDate() {
+  const now = getKoreaDate();
+  const hour = now.getHours();
+
+  // 오늘 날짜 기본값
+  let baseDate = getTodayDateString();
+
+  // 한국시간 05:00 이전 → 어제 날짜 사용
+  if (hour < 5) {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const y = yesterday.getFullYear();
+    const m = String(yesterday.getMonth() + 1).padStart(2, "0");
+    const d = String(yesterday.getDate()).padStart(2, "0");
+
+    baseDate = `${y}${m}${d}`;
+  }
+  return baseDate;
+}
