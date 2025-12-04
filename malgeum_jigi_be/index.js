@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import corsMiddleware from "./config/corsConfig.js";
 import weatherRoutes from './routes/weatherRoutes.js';
 import guideRoutes from './routes/guideRoutes.js';
+import prefetchController from "./controllers/prefetchController.js";
 
 dotenv.config(); // .env 파일 로드
 
@@ -19,12 +20,18 @@ app.use(express.json());
 app.use('/api/weather', weatherRoutes);
 app.use('/api/guides', guideRoutes);
 
+// 프리패칭 트리거 엔드포인트
+app.get("/prefetch", prefetchController.handlePrefetch);
+
+
 // 기본 라우트
 app.get("/", (req, res) => {
   res.send("🌤️ 스마트 환기 & 생활환경 가이드 서버가 실행 중입니다.");
 });
 
 // 서버 시작
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+//app.listen(PORT, () => {
+//  console.log(`✅ Server running on http://localhost:${PORT}`);
+//});
+
+export default app;

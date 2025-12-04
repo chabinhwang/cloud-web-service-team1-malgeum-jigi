@@ -1,4 +1,6 @@
 import { getCurrentWeather, getDustInfo, getDailyWeather } from "../services/kmaService.js";
+import { connectToDatabase } from "../db/mongoClient.js";
+import { getNearestStation } from "../utils/locationUtil.js";
 
 export async function getCurrentAirQuality(req, res) {
   const { latitude, longitude } = req.query;
@@ -11,16 +13,47 @@ export async function getCurrentAirQuality(req, res) {
     });
   }
 
+  // 가장 가까운 기상 관측소 찾기
+  const stn = await getNearestStation(latitude, longitude, "");
+
   try {
-    // 단기예보(온도, 습도)
+    // MongoDB 연결
+    const { db } = await connectToDatabase();
+    const currentCollection = db.collection("current");
+
+    // DB에서 최신 캐시 데이터 조회 (stn 기준으로 최신 1개)
+    const cachedData = await currentCollection
+      .find(stn ? { stn } : {})
+      .sort({ timestamp: -1 })
+      .limit(1)
+      .toArray();
+
+    if (cachedData.length > 0) {
+      const latest = cachedData[0];
+      console.log("📦 캐시된 current 데이터 반환");
+
+      return res.json({
+        success: true,
+        code: "SUCCESS",
+        message: "공기질 데이터 조회 성공 (from cache)",
+        data: {
+          pm10: latest.pm10,
+          temperature: latest.temperature,
+          humidity: latest.humidity,
+        },
+        timestamp: latest.timestamp,
+      });
+    }
+
+    // 캐시 데이터가 없을 경우
+    console.log("📡 캐시 없음 → 실시간 API 호출 중...");
+
     const shortForecast = await getCurrentWeather(latitude, longitude);
     const { TA: temperature, HM: humidity } = shortForecast;
 
-    // 황사(PM10)
     const dustInfo = await getDustInfo(latitude, longitude);
     const pm10 = Number(dustInfo?.PM10) || null;
 
-    // 응답 구성
     const response = {
       success: true,
       code: "SUCCESS",
@@ -32,8 +65,8 @@ export async function getCurrentAirQuality(req, res) {
       },
       timestamp: new Date().toISOString(),
     };
-
     res.json(response);
+
   } catch (error) {
     console.error("air-quality API Error:", error.message);
     res.status(500).json({
