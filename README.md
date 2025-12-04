@@ -1,6 +1,19 @@
 # cloud-web-service-team1
 클라우드웹서비스 1팀 맑음지기 리포지토리입니다.
 
+## APK 추출
+
+```Bash
+flutter build apk --release
+```
+
+## IOS 추출(맥에서만 가능)
+
+```Bash
+flutter build ios --release
+```
+
+
 ## Branch 전략
 
 ```
