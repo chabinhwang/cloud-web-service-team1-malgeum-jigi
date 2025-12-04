@@ -25,26 +25,49 @@ export async function getVentilationScore(req, res) {
     const cached = await ventilationCol.find({ stn }).sort({ timestamp: -1 }).limit(1).toArray();
 
     if (cached.length > 0) {
-      const latest = cached[0];
-      console.log(`📦 환기 점수 캐시 사용 (${stn})`);
+    const latest = cached[0];
 
-      return res.json({
-        success: true,
-        code: "SUCCESS",
-        message: "환기 점수 조회 성공 (from cache)",
-        data: {
-          score: latest.score,
-          status: latest.status,
-          emoji: latest.emoji,
-          location: latest.location || location,
-          description: latest.description,
-        },
-        timestamp: latest.timestamp,
-      });
+    // updatedAt 우선, 없으면 timestamp 사용
+    const cacheTimeRaw = latest.updatedAt || latest.timestamp;
+    const cacheTime = cacheTimeRaw ? new Date(cacheTimeRaw) : null;
+
+    if (cacheTime) {
+      const now = new Date(); // 서버 환경(로컬/람다/us-east) 상관 없이 UTC 기준 ms로 비교
+      const diffMs = now.getTime() - cacheTime.getTime();
+      const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+
+      if (diffMs >= 0 && diffMs <= THREE_HOURS_MS) {
+        console.log(`📦 환기 점수 캐시 사용 (${stn}) - 3시간 이내`);
+
+        return res.json({
+          success: true,
+          code: "SUCCESS",
+          message: "환기 점수 조회 성공 (from cache)",
+          data: {
+            score: latest.score,
+            status: latest.status,
+            emoji: latest.emoji,
+            location: latest.location || location,
+            description: latest.description,
+          },
+          timestamp: cacheTime.toISOString(),
+        });
+      } else {
+        console.log(
+          `⏰ 환기 점수 캐시 만료 (${stn}) - 마지막 갱신 후 3시간 초과, 실시간 생성으로 진행`
+        );
+      }
+    } else {
+      console.log(
+        `⚠️ 환기 점수 캐시에 시간 정보(updatedAt/timestamp) 없음 (${stn}) → 실시간 생성`
+      );
     }
+  } else {
+    console.log(`📡 환기 점수 캐시 없음 (${stn}) → 실시간 생성`);
+  }
+
 
     // 캐시 데이터가 없을 경우
-    console.log(`📡 환기 점수 실시간 생성 (${stn})`);
 
     // 기상청 단기예보 (온도, 습도, 강수량)
     const forecast = await getCurrentWeather(latitude, longitude, location);
@@ -106,24 +129,44 @@ export async function getOutdoorGuide(req, res) {
     const cached = await outdoorCol.find({ stn }).sort({ timestamp: -1 }).limit(1).toArray();
 
     if (cached.length > 0) {
-      const latest = cached[0];
-      console.log(`📦 외출 가이드 캐시 사용 (${stn})`);
+    const latest = cached[0];
 
-      return res.json({
-        success: true,
-        code: "SUCCESS",
-        message: "외출 가이드 조회 성공 (from cache)",
-        data: {
-          advisability: latest.advisability,
-          summary: latest.summary,
-          recommendations: latest.recommendations,
-        },
-        timestamp: latest.timestamp,
-      });
+    // updatedAt 우선 사용
+    const cacheTimeRaw = latest.updatedAt || latest.timestamp;
+    const cacheTime = cacheTimeRaw ? new Date(cacheTimeRaw) : null;
+
+    if (cacheTime) {
+      const now = new Date();
+      const diffMs = now.getTime() - cacheTime.getTime();
+      const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+
+      if (diffMs >= 0 && diffMs <= THREE_HOURS_MS) {
+        console.log(`📦 외출 가이드 캐시 사용 (${stn}) - 3시간 이내`);
+
+        return res.json({
+          success: true,
+          code: "SUCCESS",
+          message: "외출 가이드 조회 성공 (from cache)",
+          data: {
+            advisability: latest.advisability,
+            summary: latest.summary,
+            recommendations: latest.recommendations,
+          },
+          timestamp: cacheTime.toISOString(),
+        });
+      } else {
+        console.log(
+          `⏰ 외출 가이드 캐시 만료 (${stn}) - 마지막 갱신 후 3시간 초과`
+        );
+      }
+    } else {
+      console.log(
+        `⚠️ 외출 가이드 캐시 시간 정보 없음 (${stn}) → 실시간 생성`
+      );
     }
-
-    // 캐시 데이터가 없을 경우
-    console.log(`📡 외출 가이드 실시간 생성 (${stn})`);
+  } else {
+    console.log(`📡 외출 가이드 캐시 없음 (${stn}) → 실시간 생성`);
+  }
 
     // 기상청 단기예보
     const forecast = await getCurrentWeather(latitude, longitude, "현재 위치");
