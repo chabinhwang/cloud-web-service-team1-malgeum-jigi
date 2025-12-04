@@ -36,8 +36,8 @@ export async function getCurrentAirQuality(req, res) {
       const cacheTime = cacheTimeRaw ? new Date(cacheTimeRaw) : null;
 
       if (cacheTime) {
-        const nowKST = getKoreaDate();
-        const diffMs = nowKST.getTime() - cacheTime.getTime();
+        const now = new Date();
+        const diffMs = now.getTime() - cacheTime.getTime();
         const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 
         // 🕒 3시간 이내인 경우에만 캐시 사용

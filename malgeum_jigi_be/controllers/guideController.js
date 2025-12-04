@@ -129,24 +129,44 @@ export async function getOutdoorGuide(req, res) {
     const cached = await outdoorCol.find({ stn }).sort({ timestamp: -1 }).limit(1).toArray();
 
     if (cached.length > 0) {
-      const latest = cached[0];
-      console.log(`📦 외출 가이드 캐시 사용 (${stn})`);
+    const latest = cached[0];
 
-      return res.json({
-        success: true,
-        code: "SUCCESS",
-        message: "외출 가이드 조회 성공 (from cache)",
-        data: {
-          advisability: latest.advisability,
-          summary: latest.summary,
-          recommendations: latest.recommendations,
-        },
-        timestamp: latest.timestamp,
-      });
+    // updatedAt 우선 사용
+    const cacheTimeRaw = latest.updatedAt || latest.timestamp;
+    const cacheTime = cacheTimeRaw ? new Date(cacheTimeRaw) : null;
+
+    if (cacheTime) {
+      const now = new Date();
+      const diffMs = now.getTime() - cacheTime.getTime();
+      const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+
+      if (diffMs >= 0 && diffMs <= THREE_HOURS_MS) {
+        console.log(`📦 외출 가이드 캐시 사용 (${stn}) - 3시간 이내`);
+
+        return res.json({
+          success: true,
+          code: "SUCCESS",
+          message: "외출 가이드 조회 성공 (from cache)",
+          data: {
+            advisability: latest.advisability,
+            summary: latest.summary,
+            recommendations: latest.recommendations,
+          },
+          timestamp: cacheTime.toISOString(),
+        });
+      } else {
+        console.log(
+          `⏰ 외출 가이드 캐시 만료 (${stn}) - 마지막 갱신 후 3시간 초과`
+        );
+      }
+    } else {
+      console.log(
+        `⚠️ 외출 가이드 캐시 시간 정보 없음 (${stn}) → 실시간 생성`
+      );
     }
-
-    // 캐시 데이터가 없을 경우
-    console.log(`📡 외출 가이드 실시간 생성 (${stn})`);
+  } else {
+    console.log(`📡 외출 가이드 캐시 없음 (${stn}) → 실시간 생성`);
+  }
 
     // 기상청 단기예보
     const forecast = await getCurrentWeather(latitude, longitude, "현재 위치");
