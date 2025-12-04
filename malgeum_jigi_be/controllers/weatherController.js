@@ -30,24 +30,48 @@ export async function getCurrentAirQuality(req, res) {
 
     if (cachedData.length > 0) {
       const latest = cachedData[0];
-      console.log("📦 캐시된 current 데이터 반환");
 
-      return res.json({
-        success: true,
-        code: "SUCCESS",
-        message: "공기질 데이터 조회 성공 (from cache)",
-        data: {
-          pm10: latest.pm10,
-          temperature: latest.temperature,
-          humidity: latest.humidity,
-        },
-        timestamp: latest.timestamp,
-      });
+      // 🔎 캐시 타임스탬프 가져오기 (updatedAt 우선, 없으면 timestamp)
+      const cacheTimeRaw = latest.updatedAt || latest.timestamp;
+      const cacheTime = cacheTimeRaw ? new Date(cacheTimeRaw) : null;
+
+      if (cacheTime) {
+        const nowKST = getKoreaDate();
+        const diffMs = nowKST.getTime() - cacheTime.getTime();
+        const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+
+        // 🕒 3시간 이내인 경우에만 캐시 사용
+        if (diffMs >= 0 && diffMs <= THREE_HOURS_MS) {
+          console.log("📦 캐시된 current 데이터 반환 (유효, 3시간 이내)");
+
+          return res.json({
+            success: true,
+            code: "SUCCESS",
+            message: "공기질 데이터 조회 성공 (from cache)",
+            data: {
+              pm10: latest.pm10,
+              temperature: latest.temperature,
+              humidity: latest.humidity,
+            },
+            timestamp: cacheTime.toISOString(),
+          });
+        } else {
+          console.log(
+            "⏰ 캐시 존재하지만 만료됨 (3시간 초과) → 실시간 API 호출로 전환"
+          );
+        }
+      } else {
+        console.log(
+          "⚠️ 캐시 문서에 시간 정보(updatedAt/timestamp)가 없음 → 실시간 API 호출"
+        );
+      }
+    } else {
+      console.log("📡 캐시 없음 → 실시간 API 호출 중...");
     }
 
-    // 캐시 데이터가 없을 경우
-    console.log("📡 캐시 없음 → 실시간 API 호출 중...");
 
+    // 캐시 데이터가 없거나 만료된 경우, 실시간 API 호출
+    
     const shortForecast = await getCurrentWeather(latitude, longitude);
     const { TA: temperature, HM: humidity } = shortForecast;
 
