@@ -1,9 +1,11 @@
 
 /** 한국 시간 기준 Date 객체 반환 */
 export function getKoreaDate() {
+  /*
   // 한국 시간으로 현재 시각 문자열 생성
   const nowStr = new Intl.DateTimeFormat("en-US", {
-     timeZone: "Asia/Seoul", 
+     
+    timeZone: "Asia/Seoul", 
      year: "numeric", 
      month: "2-digit", 
      day: "2-digit", 
@@ -14,7 +16,12 @@ export function getKoreaDate() {
      }).format(new Date()); 
 
      // 문자열을 다시 Date 객체로 변환
-     return new Date(nowStr);
+    return new Date(nowStr);
+  */
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000; // 로컬 → UTC
+  const koreaMs = utcMs + 9 * 60 * 60 * 1000; // UTC → KST(+9h)
+  return new Date(koreaMs);
 }
 
 /** 현재 시각 기준 가장 가까운 과거 정시(00분) 반환 */

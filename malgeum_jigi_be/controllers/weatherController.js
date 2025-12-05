@@ -122,9 +122,9 @@ export async function getTodayEnvironment(req, res) {
     const dailyData = await getDailyWeather(latitude, longitude);
     const { TA_MAX, TA_MIN } = dailyData;
 
-    // 데이터 유효성 처리 (음수는 유효 데이터 없음)
-    const minTemperature = TA_MIN < 0 ? null : Number(TA_MIN);
-    const maxTemperature = TA_MAX < 0 ? null : Number(TA_MAX);
+    // 데이터 유효성 처리 (-90보다 작은 경우 유효 데이터 없음)
+    const minTemperature = TA_MIN < -90 ? null : Number(TA_MIN);
+    const maxTemperature = TA_MAX < -90 ? null : Number(TA_MAX);
 
     // 오늘 날짜 (YYYY-MM-DD 형식)
     const today = new Date().toISOString().split("T")[0];
